@@ -28,7 +28,9 @@ import CustomerProfile from "./pages/CustomerProfile";
 import ConsultantDashboard from "./pages/ConsultantDashboard";
 import ConsultantProfile from "./pages/ConsultantProfile";
 import DataOperatorDashboard from "./pages/DataOperatorDashboard";
+import DataOperatorDashboardNew from "./pages/DataOperatorDashboardNew";
 import DataOperatorHome from "./pages/DataOperatorHome";
+import DataOperatorAuth from "./pages/DataOperatorAuth";
 import DataOperatorProfileVerification from "./pages/DataOperatorProfileVerification";
 import DataOperatorCropVerification from "./pages/DataOperatorCropVerification";
 import DataOperatorRegisterFarmer from "./pages/DataOperatorRegisterFarmer";
@@ -240,10 +242,18 @@ const App = () => {
                 />
                 <Route
                   path="/data-operator"
+                  element={<DataOperatorAuth />}
+                />
+                <Route
+                  path="/data-operator/home"
                   element={<DataOperatorHome />}
                 />
                 <Route
-                  path="/data-operator/dashboard"
+                  path="/data-operator-dashboard"
+                  element={<DataOperatorDashboardNew />}
+                />
+                <Route
+                  path="/data-operator-dashboard-old"
                   element={<DataOperatorDashboard />}
                 />
                 <Route

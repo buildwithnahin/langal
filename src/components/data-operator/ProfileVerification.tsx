@@ -1,567 +1,771 @@
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
 import {
-    UserCheck,
-    MapPin,
-    Phone,
-    Mail,
-    Calendar,
-    IdCard,
-    CheckCircle,
-    XCircle,
-    AlertTriangle,
-    Eye,
-    Edit,
-    FileText,
-    User,
-    Shield,
-    ShieldCheck,
-    ShieldX,
-    Clock,
-    UserCircle,
-    Sparkles,
-    Award,
-    Star,
-    CheckCircle2,
-    AlertCircle,
-    X
-} from "lucide-react";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import api from '@/services/api';
+import { toast } from 'sonner';
+import { CheckCircle, XCircle, AlertCircle, ArrowLeft, Eye, Users, ShoppingBag, GraduationCap } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import DataOperatorHeader from '@/components/data-operator/DataOperatorHeader';
 
-interface Farmer {
-    id: number;
-    name: string;
-    nid: string;
-    phone: string;
-    email: string;
-    address: string;
-    district: string;
-    upazila: string;
-    dateOfBirth: string;
-    fatherName: string;
-    motherName: string;
-    occupation: string;
-    landOwnership: string;
-    registrationDate: string;
-    nidVerificationStatus: "verified" | "pending" | "failed";
-    profileVerificationStatus: "verified" | "pending" | "rejected";
-    profilePhoto?: string;
-    nidFrontPhoto?: string;
-    nidBackPhoto?: string;
-    documents: string[];
+interface FarmerProfile {
+  user_id: number;
+  full_name: string;
+  phone_number: string;
+  profile_photo_url_full?: string;
+  date_of_birth?: string;
+  nid_number?: string;
+  father_name?: string;
+  mother_name?: string;
+  division?: string;
+  district?: string;
+  upazila?: string;
+  union?: string;
+  post_office?: string;
+  village?: string;
+  verification_status?: 'pending' | 'approved' | 'rejected';
+  verified_at?: string;
+  verified_by?: number;
 }
 
-interface ProfileVerificationProps {
-    farmers: Farmer[];
-    onStatusUpdate: (farmerId: number, status: "verified" | "rejected") => void;
-    onEditFarmer: (farmer: Farmer) => void;
+interface CustomerProfile {
+  user_id: number;
+  full_name: string;
+  phone_number: string;
+  profile_photo_url_full?: string;
+  date_of_birth?: string;
+  nid_number?: string;
+  division?: string;
+  district?: string;
+  upazila?: string;
+  address?: string;
+  verification_status?: 'pending' | 'approved' | 'rejected';
+  verified_at?: string;
+  verified_by?: number;
 }
 
-const ProfileVerification = ({ farmers, onStatusUpdate, onEditFarmer }: ProfileVerificationProps) => {
-    const [selectedFarmer, setSelectedFarmer] = useState<Farmer | null>(null);
-    const [isDetailsOpen, setIsDetailsOpen] = useState(false);
-    const [isEditOpen, setIsEditOpen] = useState(false);
-    const [editForm, setEditForm] = useState<Farmer | null>(null);
+const ProfileVerification = () => {
+  const navigate = useNavigate();
+  const [farmers, setFarmers] = useState<FarmerProfile[]>([]);
+  const [customers, setCustomers] = useState<CustomerProfile[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedFarmer, setSelectedFarmer] = useState<FarmerProfile | null>(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<CustomerProfile | null>(null);
+  const [isViewOpen, setIsViewOpen] = useState(false);
+  const [processingId, setProcessingId] = useState<number | null>(null);
+  const [activeTab, setActiveTab] = useState<string>('farmer');
 
-    const getStatusBadge = (status: string) => {
-        switch (status) {
-            case "verified":
-                return (
-                    <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg">
-                        <ShieldCheck className="w-4 h-4 mr-1" />
-                        অনুমোদিত
-                    </Badge>
-                );
-            case "rejected":
-                return (
-                    <Badge className="bg-gradient-to-r from-red-500 to-rose-500 text-white shadow-lg">
-                        <ShieldX className="w-4 h-4 mr-1" />
-                        বাতিল
-                    </Badge>
-                );
-            case "failed":
-                return (
-                    <Badge className="bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg">
-                        <XCircle className="w-4 h-4 mr-1" />
-                        ব্যর্থ
-                    </Badge>
-                );
-            case "pending":
-            default:
-                return (
-                    <Badge className="bg-gradient-to-r from-yellow-400 to-orange-400 text-white shadow-lg animate-pulse">
-                        <Clock className="w-4 h-4 mr-1" />
-                        অপেক্ষমান
-                    </Badge>
-                );
-        }
-    };
+  useEffect(() => {
+    fetchData();
+  }, []);
 
-    const handleViewDetails = (farmer: Farmer) => {
-        setSelectedFarmer(farmer);
-        setIsDetailsOpen(true);
-    };
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      await Promise.all([fetchFarmers(), fetchCustomers()]);
+    } catch (error: any) {
+      console.error('Error fetching data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const handleEdit = (farmer: Farmer) => {
-        setEditForm({ ...farmer });
-        setIsEditOpen(true);
-    };
+  const fetchFarmers = async () => {
+    try {
+      const response = await api.get('/data-operator/farmers');
+      setFarmers(response.data.data || []);
+    } catch (error: any) {
+      console.error('Error fetching farmers:', error);
+      toast.error(error.response?.data?.message || 'কৃষক তালিকা লোড করতে ব্যর্থ');
+    }
+  };
 
-    const handleSaveEdit = () => {
-        if (editForm) {
-            onEditFarmer(editForm);
-            setIsEditOpen(false);
-            setEditForm(null);
-        }
-    };
+  const fetchCustomers = async () => {
+    try {
+      const response = await api.get('/data-operator/customers');
+      setCustomers(response.data.data || []);
+    } catch (error: any) {
+      console.error('Error fetching customers:', error);
+      toast.error(error.response?.data?.message || 'ক্রেতা তালিকা লোড করতে ব্যর্থ');
+    }
+  };
 
-    const handleStatusUpdate = (farmerId: number, status: "verified" | "rejected") => {
-        onStatusUpdate(farmerId, status);
-        setIsDetailsOpen(false);
-    };
+  const handleViewDetails = (farmer: FarmerProfile) => {
+    setSelectedFarmer(farmer);
+    setSelectedCustomer(null);
+    setIsViewOpen(true);
+  };
 
+  const handleViewDetailsCustomer = (customer: CustomerProfile) => {
+    setSelectedCustomer(customer);
+    setSelectedFarmer(null);
+    setIsViewOpen(true);
+  };
+
+  const handleVerification = async (userId: number, status: 'approved' | 'rejected') => {
+    try {
+      setProcessingId(userId);
+      
+      const response = await api.post('/data-operator/verify-profile', {
+        user_id: userId,
+        verification_status: status,
+      });
+
+      toast.success(
+        status === 'approved' 
+          ? 'প্রোফাইল অনুমোদিত হয়েছে' 
+          : 'প্রোফাইল প্রত্যাখ্যাত হয়েছে'
+      );
+
+      // Update local state based on active tab
+      if (selectedFarmer) {
+        setFarmers(farmers.map(f => 
+          f.user_id === userId 
+            ? { ...f, verification_status: status, verified_at: new Date().toISOString() }
+            : f
+        ));
+      } else if (selectedCustomer) {
+        setCustomers(customers.map(c => 
+          c.user_id === userId 
+            ? { ...c, verification_status: status, verified_at: new Date().toISOString() }
+            : c
+        ));
+      }
+
+      setIsViewOpen(false);
+    } catch (error: any) {
+      console.error('Verification error:', error);
+      toast.error(error.response?.data?.message || 'যাচাইকরণ ব্যর্থ হয়েছে');
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const getStatusBadge = (status?: string) => {
+    switch (status) {
+      case 'approved':
+        return (
+          <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
+            <CheckCircle className="mr-1 h-3 w-3" />
+            অনুমোদিত
+          </Badge>
+        );
+      case 'rejected':
+        return (
+          <Badge className="bg-red-100 text-red-800 hover:bg-red-100">
+            <XCircle className="mr-1 h-3 w-3" />
+            প্রত্যাখ্যাত
+          </Badge>
+        );
+      default:
+        return (
+          <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">
+            <AlertCircle className="mr-1 h-3 w-3" />
+            অপেক্ষমাণ
+          </Badge>
+        );
+    }
+  };
+
+  if (loading) {
     return (
-        <Card className="bg-gradient-to-br from-blue-50 to-indigo-100 border-0 shadow-xl">
-            <CardHeader className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-t-lg">
-                <CardTitle className="flex items-center gap-3 text-xl">
-                    <div className="p-2 bg-white/20 rounded-lg">
-                        <UserCheck className="h-6 w-6" />
-                    </div>
-                    কৃষকের প্রফাইল যাচাইকরণ
-                    <Sparkles className="h-5 w-5 text-yellow-300" />
-                </CardTitle>
-                <CardDescription className="text-blue-100">
-                    এনআইডি যাচাইকৃত কৃষকদের প্রফাইল অনুমোদন করুন
-                </CardDescription>
-            </CardHeader>
-            <CardContent className="p-6">
-                <div className="space-y-6">
-                    {farmers.map((farmer) => (
-                        <div key={farmer.id} className="bg-white border-2 border-transparent rounded-xl p-6 hover:border-blue-300 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-start space-x-4">
-                                    <div className="relative">
-                                        <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center shadow-lg">
-                                            {farmer.profilePhoto ? (
-                                                <img src={farmer.profilePhoto} alt={farmer.name} className="w-16 h-16 rounded-full object-cover border-4 border-white" />
-                                            ) : (
-                                                <UserCircle className="w-8 h-8 text-white" />
-                                            )}
-                                        </div>
-                                        {farmer.profileVerificationStatus === "verified" && (
-                                            <div className="absolute -top-1 -right-1 bg-green-500 rounded-full p-1">
-                                                <Award className="w-3 h-3 text-white" />
-                                            </div>
-                                        )}
-                                    </div>
-                                    <div className="space-y-2 flex-1">
-                                        <h3 className="font-bold text-xl text-gray-800 flex items-center gap-2">
-                                            {farmer.name}
-                                            {farmer.profileVerificationStatus === "verified" && (
-                                                <Star className="w-4 h-4 text-yellow-500 fill-current" />
-                                            )}
-                                        </h3>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
-                                            <span className="flex items-center text-gray-600 bg-gray-50 px-3 py-1 rounded-full">
-                                                <IdCard className="inline h-4 w-4 mr-2 text-blue-500" />
-                                                এনআইডি: {farmer.nid}
-                                            </span>
-                                            <span className="flex items-center text-gray-600 bg-gray-50 px-3 py-1 rounded-full">
-                                                <Phone className="inline h-4 w-4 mr-2 text-green-500" />
-                                                {farmer.phone}
-                                            </span>
-                                            <span className="flex items-center text-gray-600 bg-gray-50 px-3 py-1 rounded-full">
-                                                <MapPin className="inline h-4 w-4 mr-2 text-red-500" />
-                                                {farmer.upazila}, {farmer.district}
-                                            </span>
-                                            <span className="flex items-center text-gray-600 bg-gray-50 px-3 py-1 rounded-full">
-                                                <Calendar className="inline h-4 w-4 mr-2 text-purple-500" />
-                                                নিবন্ধন: {farmer.registrationDate}
-                                            </span>
-                                        </div>
-                                        <div className="flex items-center space-x-3 mt-3">
-                                            <div className="flex items-center space-x-2">
-                                                <span className="text-sm font-semibold text-gray-700">এনআইডি যাচাই:</span>
-                                                {getStatusBadge(farmer.nidVerificationStatus)}
-                                            </div>
-                                            <div className="flex items-center space-x-2">
-                                                <span className="text-sm font-semibold text-gray-700">প্রফাইল অবস্থা:</span>
-                                                {getStatusBadge(farmer.profileVerificationStatus)}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="flex flex-col space-y-2">
-                                    <Button
-                                        size="sm"
-                                        variant="outline"
-                                        className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white border-0 hover:from-blue-600 hover:to-cyan-600 shadow-md"
-                                        onClick={() => handleViewDetails(farmer)}
-                                    >
-                                        <Eye className="h-4 w-4 mr-2" />
-                                        বিস্তারিত
-                                    </Button>
-                                    <Button
-                                        size="sm"
-                                        variant="outline"
-                                        className="bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 hover:from-purple-600 hover:to-pink-600 shadow-md"
-                                        onClick={() => handleEdit(farmer)}
-                                    >
-                                        <Edit className="h-4 w-4 mr-2" />
-                                        সম্পাদনা
-                                    </Button>
-                                    {farmer.profileVerificationStatus === "pending" && (
-                                        <div className="flex space-x-2">
-                                            <Button
-                                                size="sm"
-                                                className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 shadow-md"
-                                                onClick={() => handleStatusUpdate(farmer.id, "verified")}
-                                            >
-                                                <CheckCircle2 className="h-4 w-4 mr-1" />
-                                                অনুমোদন
-                                            </Button>
-                                            <Button
-                                                size="sm"
-                                                className="bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 text-white"
-                                                onClick={() => handleStatusUpdate(farmer.id, "rejected")}
-                                            >
-                                                <XCircle className="h-4 w-4 mr-1" />
-                                                বাতিল
-                                            </Button>
-                                        </div>
-                                    )}
-                                </div>
+      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 p-4">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex items-center gap-4 mb-6">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate('/data-operator-dashboard')}
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <h1 className="text-2xl font-bold text-gray-800">প্রোফাইল যাচাই</h1>
+          </div>
+          <div className="text-center py-12">
+            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-green-600 border-r-transparent"></div>
+            <p className="mt-4 text-gray-600">তথ্য লোড হচ্ছে...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <DataOperatorHeader />
+      
+      <div className="bg-gradient-to-br from-green-50 to-blue-50 min-h-[calc(100vh-73px)] p-4">
+        <div className="max-w-7xl mx-auto">
+          {/* Page Header */}
+          <div className="mb-6 flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate('/data-operator-dashboard')}
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-800">প্রোফাইল যাচাই</h1>
+            </div>
+          </div>
+
+          {/* Tabs for different user types */}
+          <Tabs defaultValue="farmer" value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-3 mb-6">
+              <TabsTrigger value="farmer" className="flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                কৃষক
+                <Badge variant="secondary" className="ml-2">{farmers.length}</Badge>
+              </TabsTrigger>
+              <TabsTrigger value="customer" className="flex items-center gap-2">
+                <ShoppingBag className="h-4 w-4" />
+                ক্রেতা
+                <Badge variant="secondary" className="ml-2">{customers.length}</Badge>
+              </TabsTrigger>
+              <TabsTrigger value="expert" className="flex items-center gap-2">
+                <GraduationCap className="h-4 w-4" />
+                কৃষি বিশেষজ্ঞ
+                <Badge variant="secondary" className="ml-2">0</Badge>
+              </TabsTrigger>
+            </TabsList>
+
+            {/* Farmer Tab */}
+            <TabsContent value="farmer" className="space-y-6">
+              {/* Stats Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-white rounded-lg shadow p-4">
+            <div className="text-sm text-gray-600">মোট কৃষক</div>
+            <div className="text-2xl font-bold text-gray-800">{farmers.length}</div>
+          </div>
+          <div className="bg-white rounded-lg shadow p-4">
+            <div className="text-sm text-gray-600">অপেক্ষমাণ</div>
+            <div className="text-2xl font-bold text-yellow-600">
+              {farmers.filter(f => f.verification_status === 'pending' || !f.verification_status).length}
+            </div>
+          </div>
+          <div className="bg-white rounded-lg shadow p-4">
+            <div className="text-sm text-gray-600">অনুমোদিত</div>
+            <div className="text-2xl font-bold text-green-600">
+              {farmers.filter(f => f.verification_status === 'approved').length}
+            </div>
+          </div>
+        </div>
+
+        {/* Farmers List */}
+        <div className="bg-white rounded-lg shadow overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    কৃষক
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    মোবাইল নম্বর
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    এলাকা
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    অবস্থা
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    কার্যক্রম
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {farmers.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
+                      কোন কৃষক পাওয়া যায়নি
+                    </td>
+                  </tr>
+                ) : (
+                  farmers.map((farmer) => (
+                    <tr key={farmer.user_id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="h-10 w-10 flex-shrink-0">
+                            {farmer.profile_photo_url_full ? (
+                              <img
+                                className="h-10 w-10 rounded-full object-cover"
+                                src={farmer.profile_photo_url_full}
+                                alt={farmer.full_name}
+                              />
+                            ) : (
+                              <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
+                                <span className="text-green-600 font-medium">
+                                  {farmer.full_name.charAt(0)}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                          <div className="ml-4">
+                            <div className="text-sm font-medium text-gray-900">
+                              {farmer.full_name}
                             </div>
+                          </div>
                         </div>
-                    ))}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">{farmer.phone_number}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">
+                          {farmer.village && farmer.upazila 
+                            ? `${farmer.village}, ${farmer.upazila}`
+                            : farmer.district || 'তথ্য নেই'}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {getStatusBadge(farmer.verification_status)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleViewDetails(farmer)}
+                          className="mr-2"
+                        >
+                          <Eye className="mr-1 h-4 w-4" />
+                          বিস্তারিত দেখুন
+                        </Button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+            </TabsContent>
+
+            {/* Customer Tab */}
+            <TabsContent value="customer" className="space-y-6">
+              {/* Stats Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-white rounded-lg shadow p-4">
+                  <div className="text-sm text-gray-600">মোট ক্রেতা</div>
+                  <div className="text-2xl font-bold text-gray-800">{customers.length}</div>
+                </div>
+                <div className="bg-white rounded-lg shadow p-4">
+                  <div className="text-sm text-gray-600">অপেক্ষমাণ</div>
+                  <div className="text-2xl font-bold text-yellow-600">
+                    {customers.filter(c => c.verification_status === 'pending' || !c.verification_status).length}
+                  </div>
+                </div>
+                <div className="bg-white rounded-lg shadow p-4">
+                  <div className="text-sm text-gray-600">অনুমোদিত</div>
+                  <div className="text-2xl font-bold text-green-600">
+                    {customers.filter(c => c.verification_status === 'approved').length}
+                  </div>
+                </div>
+              </div>
+
+              {/* Customers List */}
+              <div className="bg-white rounded-lg shadow overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          ক্রেতা
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          মোবাইল নম্বর
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          এলাকা
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          অবস্থা
+                        </th>
+                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          কার্যক্রম
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {customers.length === 0 ? (
+                        <tr>
+                          <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
+                            কোন ক্রেতা পাওয়া যায়নি
+                          </td>
+                        </tr>
+                      ) : (
+                        customers.map((customer) => (
+                          <tr key={customer.user_id} className="hover:bg-gray-50">
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="flex items-center">
+                                <div className="h-10 w-10 flex-shrink-0">
+                                  {customer.profile_photo_url_full ? (
+                                    <img
+                                      className="h-10 w-10 rounded-full object-cover"
+                                      src={customer.profile_photo_url_full}
+                                      alt={customer.full_name}
+                                    />
+                                  ) : (
+                                    <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                                      <span className="text-blue-600 font-medium">
+                                        {customer.full_name.charAt(0)}
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="ml-4">
+                                  <div className="text-sm font-medium text-gray-900">
+                                    {customer.full_name}
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm text-gray-900">{customer.phone_number}</div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm text-gray-900">
+                                {customer.address || customer.upazila 
+                                  ? `${customer.address || customer.upazila}`
+                                  : customer.district || 'তথ্য নেই'}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              {getStatusBadge(customer.verification_status)}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleViewDetailsCustomer(customer)}
+                                className="mr-2"
+                              >
+                                <Eye className="mr-1 h-4 w-4" />
+                                বিস্তারিত দেখুন
+                              </Button>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </TabsContent>
+
+            {/* Agricultural Expert Tab */}
+            <TabsContent value="expert" className="space-y-6">
+              <div className="bg-white rounded-lg shadow p-12 text-center">
+                <GraduationCap className="h-16 w-16 mx-auto text-gray-400 mb-4" />
+                <h3 className="text-xl font-semibold text-gray-800 mb-2">শীঘ্রই আসছে</h3>
+                <p className="text-gray-600">কৃষি বিশেষজ্ঞ প্রোফাইল যাচাই ফিচার শীঘ্রই যুক্ত হবে</p>
+              </div>
+            </TabsContent>
+          </Tabs>
+
+      {/* View Details Dialog */}
+      <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {selectedFarmer ? 'কৃষক প্রোফাইল' : 'ক্রেতা প্রোফাইল'}
+            </DialogTitle>
+            <DialogDescription>
+              {selectedFarmer ? 'কৃষকের বিস্তারিত তথ্য' : 'ক্রেতার বিস্তারিত তথ্য'}
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedFarmer && (
+            <div className="space-y-6">
+              {/* Profile Photo */}
+              <div className="flex justify-center">
+                {selectedFarmer.profile_photo_url_full ? (
+                  <img
+                    src={selectedFarmer.profile_photo_url_full}
+                    alt={selectedFarmer.full_name}
+                    className="h-32 w-32 rounded-full object-cover border-4 border-green-200"
+                  />
+                ) : (
+                  <div className="h-32 w-32 rounded-full bg-green-100 flex items-center justify-center border-4 border-green-200">
+                    <span className="text-4xl text-green-600 font-bold">
+                      {selectedFarmer.full_name.charAt(0)}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Status Badge */}
+              <div className="flex justify-center">
+                {getStatusBadge(selectedFarmer.verification_status)}
+              </div>
+
+              {/* Rejection Alert */}
+              {selectedFarmer.verification_status === 'rejected' && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <div className="flex items-start">
+                    <AlertCircle className="h-5 w-5 text-red-600 mt-0.5 mr-3" />
+                    <div>
+                      <h4 className="text-sm font-medium text-red-800">প্রোফাইল প্রত্যাখ্যাত</h4>
+                      <p className="text-sm text-red-700 mt-1">
+                        আপনার প্রোফাইল প্রত্যাখ্যাত হয়েছে। সঠিক তথ্য দিয়ে পুনরায় আপডেট করার জন্য অনুগ্রহ করে অফিসে যোগাযোগ করুন।
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Personal Information */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-800 border-b pb-2">
+                  ব্যক্তিগত তথ্য
+                </h3>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">পূর্ণ নাম</label>
+                    <p className="text-base text-gray-800 mt-1">{selectedFarmer.full_name}</p>
+                  </div>
+                  
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">মোবাইল নম্বর</label>
+                    <p className="text-base text-gray-800 mt-1">{selectedFarmer.phone_number}</p>
+                  </div>
+                  
+                  {selectedFarmer.date_of_birth && (
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">জন্ম তারিখ</label>
+                      <p className="text-base text-gray-800 mt-1">{selectedFarmer.date_of_birth}</p>
+                    </div>
+                  )}
+                  
+                  {selectedFarmer.nid_number && (
+                    <div className="col-span-2">
+                      <label className="text-sm font-medium text-gray-500">জাতীয় পরিচয়পত্র নম্বর</label>
+                      <p className="text-base text-gray-800 mt-1">{selectedFarmer.nid_number}</p>
+                    </div>
+                  )}
+                  
+                  {selectedFarmer.father_name && (
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">পিতার নাম</label>
+                      <p className="text-base text-gray-800 mt-1">{selectedFarmer.father_name}</p>
+                    </div>
+                  )}
+                  
+                  {selectedFarmer.mother_name && (
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">মাতার নাম</label>
+                      <p className="text-base text-gray-800 mt-1">{selectedFarmer.mother_name}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Address Information */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-800 border-b pb-2">
+                  ঠিকানা
+                </h3>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  {selectedFarmer.division && (
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">বিভাগ</label>
+                      <p className="text-base text-gray-800 mt-1">{selectedFarmer.division}</p>
+                    </div>
+                  )}
+                  
+                  {selectedFarmer.district && (
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">জেলা</label>
+                      <p className="text-base text-gray-800 mt-1">{selectedFarmer.district}</p>
+                    </div>
+                  )}
+                  
+                  {selectedFarmer.upazila && (
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">উপজেলা</label>
+                      <p className="text-base text-gray-800 mt-1">{selectedFarmer.upazila}</p>
+                    </div>
+                  )}
+                  
+                  {selectedFarmer.union && (
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">ইউনিয়ন</label>
+                      <p className="text-base text-gray-800 mt-1">{selectedFarmer.union}</p>
+                    </div>
+                  )}
+                  
+                  {selectedFarmer.post_office && (
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">পোস্ট অফিস</label>
+                      <p className="text-base text-gray-800 mt-1">{selectedFarmer.post_office}</p>
+                    </div>
+                  )}
+                  
+                  {selectedFarmer.village && (
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">গ্রাম</label>
+                      <p className="text-base text-gray-800 mt-1">{selectedFarmer.village}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              {(!selectedFarmer.verification_status || selectedFarmer.verification_status === 'pending') && (
+                <div className="flex gap-4 pt-4">
+                  <Button
+                    onClick={() => handleVerification(selectedFarmer.user_id, 'approved')}
+                    disabled={processingId === selectedFarmer.user_id}
+                    className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                  >
+                    <CheckCircle className="mr-2 h-4 w-4" />
+                    {processingId === selectedFarmer.user_id ? 'প্রক্রিয়াকরণ...' : 'অনুমোদন করুন'}
+                  </Button>
+                  
+                  <Button
+                    onClick={() => handleVerification(selectedFarmer.user_id, 'rejected')}
+                    disabled={processingId === selectedFarmer.user_id}
+                    variant="destructive"
+                    className="flex-1"
+                  >
+                    <XCircle className="mr-2 h-4 w-4" />
+                    {processingId === selectedFarmer.user_id ? 'প্রক্রিয়াকরণ...' : 'প্রত্যাখ্যান করুন'}
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {selectedCustomer && (
+            <div className="space-y-6">
+              {/* Profile Photo */}
+              <div className="flex justify-center">
+                {selectedCustomer.profile_photo_url_full ? (
+                  <img
+                    src={selectedCustomer.profile_photo_url_full}
+                    alt={selectedCustomer.full_name}
+                    className="h-32 w-32 rounded-full object-cover border-4 border-blue-200"
+                  />
+                ) : (
+                  <div className="h-32 w-32 rounded-full bg-blue-100 flex items-center justify-center border-4 border-blue-200">
+                    <span className="text-4xl text-blue-600 font-bold">
+                      {selectedCustomer.full_name.charAt(0)}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Status Badge */}
+              <div className="flex justify-center">
+                {getStatusBadge(selectedCustomer.verification_status)}
+              </div>
+
+              {/* Customer Information */}
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">পূর্ণ নাম</label>
+                    <p className="text-base text-gray-800 mt-1">{selectedCustomer.full_name}</p>
+                  </div>
+                  
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">মোবাইল নম্বর</label>
+                    <p className="text-base text-gray-800 mt-1">{selectedCustomer.phone_number}</p>
+                  </div>
+
+                  {selectedCustomer.date_of_birth && (
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">জন্ম তারিখ</label>
+                      <p className="text-base text-gray-800 mt-1">
+                        {new Date(selectedCustomer.date_of_birth).toLocaleDateString('bn-BD')}
+                      </p>
+                    </div>
+                  )}
+
+                  {selectedCustomer.nid_number && (
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">এনআইডি নম্বর</label>
+                      <p className="text-base text-gray-800 mt-1">{selectedCustomer.nid_number}</p>
+                    </div>
+                  )}
                 </div>
 
-                {/* Details Dialog */}
-                <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
-                    <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto bg-gradient-to-br from-white to-blue-50">
-                        <DialogHeader className="pb-4 border-b border-blue-200">
-                            <DialogTitle className="flex items-center gap-3 text-2xl text-blue-800">
-                                <div className="p-2 bg-blue-100 rounded-lg">
-                                    <UserCircle className="h-6 w-6 text-blue-600" />
-                                </div>
-                                কৃষকের বিস্তারিত তথ্য
-                                <Shield className="h-5 w-5 text-green-500" />
-                            </DialogTitle>
-                            <DialogDescription className="text-blue-600 font-medium">
-                                সম্পূর্ণ প্রফাইল তথ্য যাচাই করুন
-                            </DialogDescription>
-                        </DialogHeader>
-                        {selectedFarmer && (
-                            <div className="space-y-6 pt-4">
-                                {/* Personal Information */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <Card className="bg-gradient-to-br from-green-50 to-emerald-100 border-green-200 shadow-lg">
-                                        <CardHeader className="bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-t-lg">
-                                            <CardTitle className="text-lg flex items-center gap-2">
-                                                <User className="h-5 w-5" />
-                                                ব্যক্তিগত তথ্য
-                                            </CardTitle>
-                                        </CardHeader>
-                                        <CardContent className="space-y-4 p-4">
-                                            <div className="bg-white p-3 rounded-lg shadow-sm">
-                                                <Label className="font-semibold text-green-700 flex items-center gap-2">
-                                                    <UserCircle className="h-4 w-4" />
-                                                    নাম
-                                                </Label>
-                                                <p className="text-gray-800 font-medium mt-1">{selectedFarmer.name}</p>
-                                            </div>
-                                            <div className="bg-white p-3 rounded-lg shadow-sm">
-                                                <Label className="font-semibold text-green-700 flex items-center gap-2">
-                                                    <IdCard className="h-4 w-4" />
-                                                    এনআইডি নম্বর
-                                                </Label>
-                                                <p className="text-gray-800 font-medium mt-1">{selectedFarmer.nid}</p>
-                                            </div>
-                                            <div className="bg-white p-3 rounded-lg shadow-sm">
-                                                <Label className="font-semibold text-green-700 flex items-center gap-2">
-                                                    <Calendar className="h-4 w-4" />
-                                                    জন্ম তারিখ
-                                                </Label>
-                                                <p className="text-gray-800 font-medium mt-1">{selectedFarmer.dateOfBirth}</p>
-                                            </div>
-                                            <div className="bg-white p-3 rounded-lg shadow-sm">
-                                                <Label className="font-semibold text-green-700">পিতার নাম</Label>
-                                                <p className="text-gray-800 font-medium mt-1">{selectedFarmer.fatherName}</p>
-                                            </div>
-                                            <div className="bg-white p-3 rounded-lg shadow-sm">
-                                                <Label className="font-semibold text-green-700">মাতার নাম</Label>
-                                                <p className="text-gray-800 font-medium mt-1">{selectedFarmer.motherName}</p>
-                                            </div>
-                                        </CardContent>
-                                    </Card>
+                {/* Address Information */}
+                <div className="border-t pt-4">
+                  <h4 className="font-medium text-gray-700 mb-3">ঠিকানা তথ্য</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    {selectedCustomer.division && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-500">বিভাগ</label>
+                        <p className="text-base text-gray-800 mt-1">{selectedCustomer.division}</p>
+                      </div>
+                    )}
 
-                                    <Card className="bg-gradient-to-br from-blue-50 to-cyan-100 border-blue-200 shadow-lg">
-                                        <CardHeader className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-t-lg">
-                                            <CardTitle className="text-lg flex items-center gap-2">
-                                                <Phone className="h-5 w-5" />
-                                                যোগাযোগের তথ্য
-                                            </CardTitle>
-                                        </CardHeader>
-                                        <CardContent className="space-y-4 p-4">
-                                            <div className="bg-white p-3 rounded-lg shadow-sm">
-                                                <Label className="font-semibold text-blue-700 flex items-center gap-2">
-                                                    <Phone className="h-4 w-4" />
-                                                    ফোন নম্বর
-                                                </Label>
-                                                <p className="text-gray-800 font-medium mt-1">{selectedFarmer.phone}</p>
-                                            </div>
-                                            <div className="bg-white p-3 rounded-lg shadow-sm">
-                                                <Label className="font-semibold text-blue-700 flex items-center gap-2">
-                                                    <Mail className="h-4 w-4" />
-                                                    ইমেইল
-                                                </Label>
-                                                <p className="text-gray-800 font-medium mt-1">{selectedFarmer.email}</p>
-                                            </div>
-                                            <div className="bg-white p-3 rounded-lg shadow-sm">
-                                                <Label className="font-semibold text-blue-700 flex items-center gap-2">
-                                                    <MapPin className="h-4 w-4" />
-                                                    ঠিকানা
-                                                </Label>
-                                                <p className="text-gray-800 font-medium mt-1">{selectedFarmer.address}</p>
-                                            </div>
-                                            <div className="bg-white p-3 rounded-lg shadow-sm">
-                                                <Label className="font-semibold text-blue-700">উপজেলা</Label>
-                                                <p className="text-gray-800 font-medium mt-1">{selectedFarmer.upazila}</p>
-                                            </div>
-                                            <div className="bg-white p-3 rounded-lg shadow-sm">
-                                                <Label className="font-semibold text-blue-700">জেলা</Label>
-                                                <p className="text-gray-800 font-medium mt-1">{selectedFarmer.district}</p>
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-                                </div>
+                    {selectedCustomer.district && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-500">জেলা</label>
+                        <p className="text-base text-gray-800 mt-1">{selectedCustomer.district}</p>
+                      </div>
+                    )}
 
-                                {/* Documents */}
-                                <Card className="bg-gradient-to-br from-purple-50 to-pink-100 border-purple-200 shadow-lg">
-                                    <CardHeader className="bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-t-lg">
-                                        <CardTitle className="text-lg flex items-center gap-2">
-                                            <FileText className="h-5 w-5" />
-                                            কাগজপত্র
-                                            <Sparkles className="h-4 w-4 text-yellow-300" />
-                                        </CardTitle>
-                                    </CardHeader>
-                                    <CardContent className="p-6">
-                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                            <div className="text-center">
-                                                <Label className="font-semibold text-purple-700 mb-3 block">প্রফাইল ফটো</Label>
-                                                <div className="bg-white border-2 border-dashed border-purple-300 rounded-xl p-4 hover:border-purple-500 transition-colors">
-                                                    {selectedFarmer.profilePhoto ? (
-                                                        <div className="relative">
-                                                            <img src={selectedFarmer.profilePhoto} alt="Profile" className="w-full h-32 object-cover rounded-lg shadow-md" />
-                                                            <div className="absolute top-2 right-2 bg-green-500 rounded-full p-1">
-                                                                <CheckCircle2 className="w-3 h-3 text-white" />
-                                                            </div>
-                                                        </div>
-                                                    ) : (
-                                                        <div className="w-full h-32 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg flex items-center justify-center">
-                                                            <UserCircle className="w-12 h-12 text-gray-400" />
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                            <div className="text-center">
-                                                <Label className="font-semibold text-purple-700 mb-3 block">এনআইডি (সামনে)</Label>
-                                                <div className="bg-white border-2 border-dashed border-purple-300 rounded-xl p-4 hover:border-purple-500 transition-colors">
-                                                    {selectedFarmer.nidFrontPhoto ? (
-                                                        <div className="relative">
-                                                            <img src={selectedFarmer.nidFrontPhoto} alt="NID Front" className="w-full h-32 object-cover rounded-lg shadow-md" />
-                                                            <div className="absolute top-2 right-2 bg-green-500 rounded-full p-1">
-                                                                <CheckCircle2 className="w-3 h-3 text-white" />
-                                                            </div>
-                                                        </div>
-                                                    ) : (
-                                                        <div className="w-full h-32 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg flex items-center justify-center">
-                                                            <FileText className="w-12 h-12 text-gray-400" />
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                            <div className="text-center">
-                                                <Label className="font-semibold text-purple-700 mb-3 block">এনআইডি (পিছনে)</Label>
-                                                <div className="bg-white border-2 border-dashed border-purple-300 rounded-xl p-4 hover:border-purple-500 transition-colors">
-                                                    {selectedFarmer.nidBackPhoto ? (
-                                                        <div className="relative">
-                                                            <img src={selectedFarmer.nidBackPhoto} alt="NID Back" className="w-full h-32 object-cover rounded-lg shadow-md" />
-                                                            <div className="absolute top-2 right-2 bg-green-500 rounded-full p-1">
-                                                                <CheckCircle2 className="w-3 h-3 text-white" />
-                                                            </div>
-                                                        </div>
-                                                    ) : (
-                                                        <div className="w-full h-32 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg flex items-center justify-center">
-                                                            <FileText className="w-12 h-12 text-gray-400" />
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </CardContent>
-                                </Card>
+                    {selectedCustomer.upazila && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-500">উপজেলা</label>
+                        <p className="text-base text-gray-800 mt-1">{selectedCustomer.upazila}</p>
+                      </div>
+                    )}
 
-                                {/* Action Buttons */}
-                                <div className="flex justify-end space-x-3 pt-6 border-t border-blue-200">
-                                    <Button
-                                        variant="outline"
-                                        onClick={() => setIsDetailsOpen(false)}
-                                        className="bg-gray-50 hover:bg-gray-100 border-gray-300"
-                                    >
-                                        বন্ধ করুন
-                                    </Button>
-                                    {selectedFarmer.profileVerificationStatus === "pending" && (
-                                        <>
-                                            <Button
-                                                className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 shadow-lg"
-                                                onClick={() => handleStatusUpdate(selectedFarmer.id, "verified")}
-                                            >
-                                                <CheckCircle2 className="h-5 w-5 mr-2" />
-                                                অনুমোদন করুন
-                                            </Button>
-                                            <Button
-                                                className="bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 shadow-lg"
-                                                onClick={() => handleStatusUpdate(selectedFarmer.id, "rejected")}
-                                            >
-                                                <XCircle className="h-5 w-5 mr-2" />
-                                                বাতিল করুন
-                                            </Button>
-                                        </>
-                                    )}
-                                </div>
-                            </div>
-                        )}
-                    </DialogContent>
-                </Dialog>
+                    {selectedCustomer.address && (
+                      <div className="col-span-2">
+                        <label className="text-sm font-medium text-gray-500">সম্পূর্ণ ঠিকানা</label>
+                        <p className="text-base text-gray-800 mt-1">{selectedCustomer.address}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
 
-                {/* Edit Dialog */}
-                <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-                    <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto bg-gradient-to-br from-white to-orange-50">
-                        <DialogHeader className="pb-4 border-b border-orange-200">
-                            <DialogTitle className="flex items-center gap-3 text-2xl text-orange-800">
-                                <div className="p-2 bg-orange-100 rounded-lg">
-                                    <Edit className="h-6 w-6 text-orange-600" />
-                                </div>
-                                কৃষকের তথ্য সম্পাদনা
-                                <Sparkles className="h-5 w-5 text-yellow-500" />
-                            </DialogTitle>
-                            <DialogDescription className="text-orange-600 font-medium">
-                                প্রয়োজনীয় তথ্য সংশোধন করুন
-                            </DialogDescription>
-                        </DialogHeader>
-                        {editForm && (
-                            <div className="space-y-6 pt-4">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="name" className="flex items-center gap-2 font-semibold text-orange-700">
-                                            <UserCircle className="h-4 w-4" />
-                                            নাম
-                                        </Label>
-                                        <Input
-                                            id="name"
-                                            value={editForm.name}
-                                            onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                                            className="border-orange-200 focus:border-orange-400 bg-white shadow-sm"
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="phone" className="flex items-center gap-2 font-semibold text-orange-700">
-                                            <Phone className="h-4 w-4" />
-                                            ফোন নম্বর
-                                        </Label>
-                                        <Input
-                                            id="phone"
-                                            value={editForm.phone}
-                                            onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
-                                            className="border-orange-200 focus:border-orange-400 bg-white shadow-sm"
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="email" className="flex items-center gap-2 font-semibold text-orange-700">
-                                            <Mail className="h-4 w-4" />
-                                            ইমেইল
-                                        </Label>
-                                        <Input
-                                            id="email"
-                                            type="email"
-                                            value={editForm.email}
-                                            onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
-                                            className="border-orange-200 focus:border-orange-400 bg-white shadow-sm"
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="district" className="flex items-center gap-2 font-semibold text-orange-700">
-                                            <MapPin className="h-4 w-4" />
-                                            জেলা
-                                        </Label>
-                                        <Input
-                                            id="district"
-                                            value={editForm.district}
-                                            onChange={(e) => setEditForm({ ...editForm, district: e.target.value })}
-                                            className="border-orange-200 focus:border-orange-400 bg-white shadow-sm"
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="upazila" className="font-semibold text-orange-700">উপজেলা</Label>
-                                        <Input
-                                            id="upazila"
-                                            value={editForm.upazila}
-                                            onChange={(e) => setEditForm({ ...editForm, upazila: e.target.value })}
-                                            className="border-orange-200 focus:border-orange-400 bg-white shadow-sm"
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="occupation" className="font-semibold text-orange-700">পেশা</Label>
-                                        <Input
-                                            id="occupation"
-                                            value={editForm.occupation}
-                                            onChange={(e) => setEditForm({ ...editForm, occupation: e.target.value })}
-                                            className="border-orange-200 focus:border-orange-400 bg-white shadow-sm"
-                                        />
-                                    </div>
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="address" className="flex items-center gap-2 font-semibold text-orange-700">
-                                        <MapPin className="h-4 w-4" />
-                                        ঠিকানা
-                                    </Label>
-                                    <Textarea
-                                        id="address"
-                                        value={editForm.address}
-                                        onChange={(e) => setEditForm({ ...editForm, address: e.target.value })}
-                                        className="border-orange-200 focus:border-orange-400 bg-white shadow-sm min-h-[80px]"
-                                    />
-                                </div>
-                                <div className="flex justify-end space-x-3 pt-6 border-t border-orange-200">
-                                    <Button
-                                        variant="outline"
-                                        onClick={() => setIsEditOpen(false)}
-                                        className="bg-gray-50 hover:bg-gray-100 border-gray-300"
-                                    >
-                                        বাতিল
-                                    </Button>
-                                    <Button
-                                        onClick={handleSaveEdit}
-                                        className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 shadow-lg"
-                                    >
-                                        <CheckCircle2 className="h-4 w-4 mr-2" />
-                                        সংরক্ষণ করুন
-                                    </Button>
-                                </div>
-                            </div>
-                        )}
-                    </DialogContent>
-                </Dialog>
-            </CardContent>
-        </Card>
-    );
+              {/* Action Buttons */}
+              {(!selectedCustomer.verification_status || selectedCustomer.verification_status === 'pending') && (
+                <div className="flex gap-4 pt-4">
+                  <Button
+                    onClick={() => handleVerification(selectedCustomer.user_id, 'approved')}
+                    disabled={processingId === selectedCustomer.user_id}
+                    className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                  >
+                    <CheckCircle className="mr-2 h-4 w-4" />
+                    {processingId === selectedCustomer.user_id ? 'প্রক্রিয়াকরণ...' : 'অনুমোদন করুন'}
+                  </Button>
+                  
+                  <Button
+                    onClick={() => handleVerification(selectedCustomer.user_id, 'rejected')}
+                    disabled={processingId === selectedCustomer.user_id}
+                    variant="destructive"
+                    className="flex-1"
+                  >
+                    <XCircle className="mr-2 h-4 w-4" />
+                    {processingId === selectedCustomer.user_id ? 'প্রক্রিয়াকরণ...' : 'প্রত্যাখ্যান করুন'}
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default ProfileVerification;

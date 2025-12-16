@@ -104,39 +104,11 @@ const DataOperatorProfileVerification = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            {/* Header */}
-            <div className="bg-white shadow-sm border-b">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex justify-between items-center py-6">
-                        <div className="flex items-center gap-4">
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => navigate('/data-operator')}
-                                className="flex items-center gap-2"
-                            >
-                                <ArrowLeft className="h-4 w-4" />
-                                ড্যাশবোর্ড
-                            </Button>
-                            <div>
-                                <h1 className="text-2xl font-bold text-gray-900">প্রোফাইল যাচাই</h1>
-                                <p className="text-gray-600">কৃষকদের প্রোফাইল যাচাই ও অনুমোদন</p>
-                            </div>
-                        </div>
-                        <UserCheck className="h-8 w-8 text-blue-600" />
-                    </div>
-                </div>
-            </div>
-
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <ProfileVerification
-                    farmers={farmers}
-                    onStatusUpdate={handleStatusUpdate}
-                    onEditFarmer={handleEditFarmer}
-                />
-            </div>
-        </div>
+        <ProfileVerification
+            farmers={farmers}
+            onStatusUpdate={handleStatusUpdate}
+            onEditFarmer={handleEditFarmer}
+        />
     );
 };
 

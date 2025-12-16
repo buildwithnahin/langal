@@ -34,6 +34,7 @@ import { ReportDetail, ReportStats, ReportStatus } from "@/types/social";
 import { SocialFeedReportService } from "@/services/socialFeedReportService";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import DataOperatorHeader from "@/components/data-operator/DataOperatorHeader";
 
 const SocialFeedReportMng = () => {
     const navigate = useNavigate();
@@ -158,23 +159,24 @@ const SocialFeedReportMng = () => {
     }
 
     return (
-        <div className="p-6 max-w-7xl mx-auto">
-            {/* Header with Back Button */}
-            <div className="mb-6">
-                <div className="flex items-center gap-4 mb-4">
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+            <DataOperatorHeader />
+            
+            <div className="p-6 max-w-7xl mx-auto">
+                {/* Page Header */}
+                <div className="mb-6 flex items-center gap-4">
                     <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => navigate("/data-operator")}
-                        className="flex items-center gap-2"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => navigate('/data-operator-dashboard')}
                     >
-                        <ArrowLeft className="h-4 w-4" />
-                        ড্যাশবোর্ডে ফিরুন
+                        <ArrowLeft className="h-5 w-5" />
                     </Button>
+                    <div>
+                        <h1 className="text-2xl font-bold text-gray-900 mb-2">সোশ্যাল ফিড রিপোর্ট ম্যানেজমেন্ট</h1>
+                        <p className="text-gray-600">পোস্ট এবং কমেন্টের রিপোর্ট পরিচালনা করুন</p>
+                    </div>
                 </div>
-                <h1 className="text-2xl font-bold text-gray-900 mb-2">সোশ্যাল ফিড রিপোর্ট ম্যানেজমেন্ট</h1>
-                <p className="text-gray-600">পোস্ট এবং কমেন্টের রিপোর্ট পরিচালনা করুন</p>
-            </div>
 
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
@@ -381,8 +383,7 @@ const SocialFeedReportMng = () => {
                         </TabsContent>
                     </Tabs>
                 </CardContent>
-            </Card>
-        </div>
+            </Card>            </div>        </div>
     );
 };
 

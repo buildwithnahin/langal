@@ -32,7 +32,7 @@ class UserProfile extends Model
     protected function casts(): array
     {
         return [
-            'date_of_birth' => 'date',
+            'date_of_birth' => 'date:Y-m-d',
             'verified_at' => 'datetime',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
@@ -79,6 +79,6 @@ class UserProfile extends Model
      */
     public function isVerified(): bool
     {
-        return $this->verification_status === 'verified';
+        return $this->verification_status === 'approved';
     }
 }

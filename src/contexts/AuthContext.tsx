@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-export type UserType = 'farmer' | 'customer' | 'expert';
+export type UserType = 'farmer' | 'customer' | 'expert' | 'data_operator';
 
 export interface UserLocationInfo {
     village?: string;
@@ -22,6 +22,7 @@ export interface User {
     profilePhoto?: string;
     location?: string;
     location_info?: UserLocationInfo;
+    verificationStatus?: 'pending' | 'approved' | 'rejected';
 }
 
 interface AuthContextType {

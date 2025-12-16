@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, BarChart3, Download, FileText, Calendar, TrendingUp, Users, Sprout, MapPin } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import DataOperatorHeader from "@/components/data-operator/DataOperatorHeader";
 
 const DataOperatorReports = () => {
     const navigate = useNavigate();
@@ -58,20 +59,20 @@ const DataOperatorReports = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            {/* Header */}
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+            <DataOperatorHeader />
+            
+            {/* Page Header */}
             <div className="bg-white shadow-sm border-b">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center py-6">
                         <div className="flex items-center gap-4">
                             <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => navigate('/data-operator')}
-                                className="flex items-center gap-2"
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => navigate('/data-operator-dashboard')}
                             >
-                                <ArrowLeft className="h-4 w-4" />
-                                ড্যাশবোর্ড
+                                <ArrowLeft className="h-5 w-5" />
                             </Button>
                             <div>
                                 <h1 className="text-2xl font-bold text-gray-900">রিপোর্ট ও বিশ্লেষণ</h1>

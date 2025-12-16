@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Bell, Search, LogOut } from "lucide-react";
+import { Bell, Search, LogOut, CheckCircle, XCircle, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotifications } from "@/contexts/NotificationContext";
@@ -170,6 +170,22 @@ export const Header = () => {
                       user?.type === 'expert' ? 'কৃষি বিশেষজ্ঞ' :
                         user?.type === 'customer' ? 'ক্রেতা' : ''}
                   </div>
+                  {user?.type === 'farmer' && user?.verificationStatus && (
+                    <div className="mt-1">
+                      {user.verificationStatus === 'approved' && (
+                        <Badge className="bg-green-100 text-green-800 hover:bg-green-100 text-xs">
+                          <CheckCircle className="mr-1 h-3 w-3" />
+                          যাচাইকৃত
+                        </Badge>
+                      )}
+                      {user.verificationStatus === 'pending' && (
+                        <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100 text-xs">
+                          <Clock className="mr-1 h-3 w-3" />
+                          যাচাই মুলতবি
+                        </Badge>
+                      )}
+                    </div>
+                  )}
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>

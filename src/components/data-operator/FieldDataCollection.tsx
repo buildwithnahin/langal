@@ -1,641 +1,635 @@
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
-    ClipboardList,
-    MapPin,
-    Camera,
-    FileText,
-    AlertTriangle,
-    CheckCircle,
-    Bug,
-    Calendar,
-    Plus,
-    Eye,
-    Send
-} from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import api from '@/services/api';
+import { toast } from 'sonner';
+import { 
+  ArrowLeft, 
+  CloudSun, 
+  Droplets, 
+  Thermometer, 
+  Bug, 
+  Sprout,
+  Calendar,
+  Plus,
+  Eye,
+  Trash2,
+  MapPin
+} from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import LocationSelector from '@/components/farmer/LocationSelector';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+
+interface LocationData {
+  postal_code: number;
+  division: string;
+  division_bn: string;
+  district: string;
+  district_bn: string;
+  upazila: string;
+  upazila_bn: string;
+  post_office: string;
+  post_office_bn: string;
+}
 
 interface FieldReport {
-    id: number;
-    reportDate: string;
-    operatorName: string;
-    unionName: string;
-    villageName: string;
-    farmerName: string;
-    farmerPhone: string;
-    cropType: string;
-    landArea: string;
-    cropHealth: "excellent" | "good" | "fair" | "poor" | "critical";
-    diseases: string[];
-    fertilizers: Array<{ name: string; quantity: string; date: string }>;
-    pesticides: Array<{ name: string; quantity: string; date: string }>;
-    gpsCoordinates: { latitude: number; longitude: number };
-    photos: string[];
-    notes: string;
-    marketPrice: number;
-    status: "draft" | "submitted" | "processed";
+  report_id: number;
+  postal_code?: number;
+  village: string;
+  weather_condition: string;
+  temperature?: number;
+  rainfall?: number;
+  crop_condition?: string;
+  pest_disease?: string;
+  soil_moisture?: string;
+  irrigation_status?: string;
+  notes?: string;
+  report_date: string;
+  location_info?: {
+    division_bn?: string;
+    district_bn?: string;
+    upazila_bn?: string;
+    post_office_bn?: string;
+  };
 }
 
 const FieldDataCollection = () => {
-    const { toast } = useToast();
-    const [activeTab, setActiveTab] = useState("new-report");
-    const [selectedReport, setSelectedReport] = useState<FieldReport | null>(null);
-    const [isViewOpen, setIsViewOpen] = useState(false);
+  const navigate = useNavigate();
+  const [reports, setReports] = useState<FieldReport[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [selectedReport, setSelectedReport] = useState<FieldReport | null>(null);
+  const [isViewOpen, setIsViewOpen] = useState(false);
+  
+  const [formData, setFormData] = useState({
+    village: '',
+    postal_code: 0,
+    weather_condition: '',
+    temperature: '',
+    rainfall: '',
+    crop_condition: '',
+    pest_disease: '',
+    soil_moisture: '',
+    irrigation_status: '',
+    notes: '',
+    report_date: new Date().toISOString().split('T')[0]
+  });
 
-    // Sample field reports data
-    const [fieldReports, setFieldReports] = useState<FieldReport[]>([
-        {
-            id: 1,
-            reportDate: "০১/০৯/২০২৅",
-            operatorName: "রাহিম উদ্দিন",
-            unionName: "রামপুর ইউনিয়ন",
-            villageName: "পূর্ব রামপুর",
-            farmerName: "করিম মিয়া",
-            farmerPhone: "০১৭১২৩৪৫৬৭৮",
-            cropType: "ধান (বোরো)",
-            landArea: "৩ বিঘা",
-            cropHealth: "good",
-            diseases: ["বাদামী গাছফড়িং", "পাতা পোড়া রোগ"],
-            fertilizers: [
-                { name: "ইউরিয়া", quantity: "৫০ কেজি", date: "১৫/০৮/২০২৫" },
-                { name: "TSP", quantity: "২৫ কেজি", date: "১০/০৮/২০২৫" }
-            ],
-            pesticides: [
-                { name: "ইমিডাক্লোপ্রিড", quantity: "২০০ মিলি", date: "২৫/০৮/২০২৫" }
-            ],
-            gpsCoordinates: { latitude: 23.4607, longitude: 91.1809 },
-            photos: ["জমির ছবি ১", "ফসলের ছবি ১", "রোগাক্রান্ত পাতার ছবি"],
-            notes: "ফসলের অবস্থা মোটামুটি ভালো। বৃষ্টির কারণে কিছু রোগ দেখা দিয়েছে।",
-            marketPrice: 32,
-            status: "submitted"
-        },
-        {
-            id: 2,
-            reportDate: "৩১/০৮/২০২৫",
-            operatorName: "রাহিম উদ্দিন",
-            unionName: "রামপুর ইউনিয়ন",
-            villageName: "মধ্য রামপুর",
-            farmerName: "আব্দুল জব্বার",
-            farmerPhone: "০১৮১২৩৪৫৬৭৮",
-            cropType: "আলু",
-            landArea: "২ বিঘা",
-            cropHealth: "excellent",
-            diseases: [],
-            fertilizers: [
-                { name: "কমপ্লেক্স", quantity: "৪০ কেজি", date: "২০/০৮/২০২৫" }
-            ],
-            pesticides: [],
-            gpsCoordinates: { latitude: 23.4612, longitude: 91.1815 },
-            photos: ["আলুর ক্ষেত", "আলু গাছের ছবি"],
-            notes: "আলুর ফলন খুবই ভালো হবে বলে আশা করা যাচ্ছে।",
-            marketPrice: 25,
-            status: "processed"
-        }
-    ]);
+  const [location, setLocation] = useState<LocationData | null>(null);
 
-    // New report form state
-    const [newReport, setNewReport] = useState<Partial<FieldReport>>({
-        reportDate: new Date().toLocaleDateString('bn-BD'),
-        operatorName: "রাহিম উদ্দিন",
-        unionName: "",
-        villageName: "",
-        farmerName: "",
-        farmerPhone: "",
-        cropType: "",
-        landArea: "",
-        cropHealth: "good",
-        diseases: [],
-        fertilizers: [],
-        pesticides: [],
-        notes: "",
-        marketPrice: 0,
-        status: "draft"
-    });
+  useEffect(() => {
+    fetchReports();
+  }, []);
 
-    const cropTypes = [
-        "ধান (আউশ)", "ধান (আমন)", "ধান (বোরো)", "গম", "ভুট্টা", "পাট",
-        "আলু", "মিষ্টি আলু", "পেঁয়াজ", "রসুন", "টমেটো", "বেগুন", "ফুলকপি", "বাঁধাকপি"
-    ];
+  const fetchReports = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get('/data-operator/field-reports');
+      setReports(response.data.data || []);
+    } catch (error: any) {
+      console.error('Error fetching reports:', error);
+      toast.error(error.response?.data?.message || 'রিপোর্ট লোড করতে ব্যর্থ');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const commonDiseases = [
-        "বাদামী গাছফড়িং", "সাদা গাছফড়িং", "পাতা পোড়া রোগ", "টুংরো ভাইরাস",
-        "ব্লাস্ট রোগ", "ব্যাকটেরিয়াল লিফ ব্লাইট", "শীথ ব্লাইট", "মাজরা পোকা"
-    ];
+  const handleLocationSelect = (locationData: LocationData) => {
+    setLocation(locationData);
+    setFormData(prev => ({
+      ...prev,
+      postal_code: locationData.postal_code
+    }));
+  };
 
-    const getHealthBadge = (health: string) => {
-        const healthConfig = {
-            excellent: { label: "চমৎকার", class: "bg-green-100 text-green-800" },
-            good: { label: "ভালো", class: "bg-blue-100 text-blue-800" },
-            fair: { label: "মোটামুটি", class: "bg-yellow-100 text-yellow-800" },
-            poor: { label: "খারাপ", class: "bg-orange-100 text-orange-800" },
-            critical: { label: "সংকটাপন্ন", class: "bg-red-100 text-red-800" }
-        };
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-        const config = healthConfig[health as keyof typeof healthConfig] || healthConfig.good;
-        return <Badge className={config.class}>{config.label}</Badge>;
+    if (!formData.village) {
+      toast.error('গ্রামের নাম দিন');
+      return;
+    }
+
+    if (!formData.weather_condition) {
+      toast.error('আবহাওয়ার অবস্থা নির্বাচন করুন');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await api.post('/data-operator/field-reports', formData);
+      
+      toast.success('রিপোর্ট সফলভাবে সংরক্ষিত হয়েছে');
+      
+      // Reset form
+      setFormData({
+        village: '',
+        postal_code: 0,
+        weather_condition: '',
+        temperature: '',
+        rainfall: '',
+        crop_condition: '',
+        pest_disease: '',
+        soil_moisture: '',
+        irrigation_status: '',
+        notes: '',
+        report_date: new Date().toISOString().split('T')[0]
+      });
+      setLocation(null);
+      setShowForm(false);
+      
+      // Refresh list
+      fetchReports();
+    } catch (error: any) {
+      console.error('Error saving report:', error);
+      toast.error(error.response?.data?.message || 'রিপোর্ট সংরক্ষণ করতে ব্যর্থ');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (reportId: number) => {
+    if (!confirm('আপনি কি এই রিপোর্ট মুছে ফেলতে চান?')) return;
+
+    try {
+      await api.delete(`/data-operator/field-reports/${reportId}`);
+      toast.success('রিপোর্ট মুছে ফেলা হয়েছে');
+      fetchReports();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'রিপোর্ট মুছতে ব্যর্থ');
+    }
+  };
+
+  const getWeatherIcon = (condition: string) => {
+    const icons: any = {
+      'sunny': '☀️',
+      'cloudy': '☁️',
+      'rainy': '🌧️',
+      'stormy': '⛈️'
     };
+    return icons[condition] || '🌤️';
+  };
 
-    const getStatusBadge = (status: string) => {
-        const statusConfig = {
-            draft: { label: "খসড়া", class: "bg-gray-100 text-gray-800" },
-            submitted: { label: "জমাদান", class: "bg-blue-100 text-blue-800" },
-            processed: { label: "প্রক্রিয়াজাত", class: "bg-green-100 text-green-800" }
-        };
-
-        const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.draft;
-        return <Badge className={config.class}>{config.label}</Badge>;
+  const getWeatherBadgeColor = (condition: string) => {
+    const colors: any = {
+      'sunny': 'bg-yellow-100 text-yellow-800',
+      'cloudy': 'bg-gray-100 text-gray-800',
+      'rainy': 'bg-blue-100 text-blue-800',
+      'stormy': 'bg-purple-100 text-purple-800'
     };
+    return colors[condition] || 'bg-gray-100 text-gray-800';
+  };
 
-    const handleSubmitReport = () => {
-        if (!newReport.farmerName || !newReport.cropType || !newReport.unionName) {
-            toast({
-                title: "ত্রুটি",
-                description: "অনুগ্রহ করে প্রয়োজনীয় তথ্য পূরণ করুন",
-                variant: "destructive",
-            });
-            return;
-        }
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-yellow-50 p-4">
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate('/data-operator-dashboard')}
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-800">মাঠ পর্যায়ের তথ্য</h1>
+              <p className="text-sm text-gray-600">আবহাওয়া ও কৃষি তথ্য সংগ্রহ</p>
+            </div>
+          </div>
+          
+          <Button
+            onClick={() => setShowForm(!showForm)}
+            className="bg-orange-600 hover:bg-orange-700"
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            নতুন রিপোর্ট
+          </Button>
+        </div>
 
-        const reportToSubmit = {
-            ...newReport,
-            id: fieldReports.length + 1,
-            status: "submitted" as const,
-            gpsCoordinates: { latitude: 23.4607 + Math.random() * 0.01, longitude: 91.1809 + Math.random() * 0.01 },
-            photos: ["জমির ছবি", "ফসলের ছবি"]
-        } as FieldReport;
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-orange-100 rounded-lg">
+                  <CloudSun className="h-6 w-6 text-orange-600" />
+                </div>
+                <div>
+                  <div className="text-sm text-gray-600">মোট রিপোর্ট</div>
+                  <div className="text-2xl font-bold text-gray-800">{reports.length}</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-blue-100 rounded-lg">
+                  <Calendar className="h-6 w-6 text-blue-600" />
+                </div>
+                <div>
+                  <div className="text-sm text-gray-600">আজকের রিপোর্ট</div>
+                  <div className="text-2xl font-bold text-gray-800">
+                    {reports.filter(r => r.report_date === new Date().toISOString().split('T')[0]).length}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-green-100 rounded-lg">
+                  <MapPin className="h-6 w-6 text-green-600" />
+                </div>
+                <div>
+                  <div className="text-sm text-gray-600">এলাকা</div>
+                  <div className="text-2xl font-bold text-gray-800">
+                    {new Set(reports.map(r => r.village)).size}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
-        setFieldReports(prev => [reportToSubmit, ...prev]);
-
-        // Reset form
-        setNewReport({
-            reportDate: new Date().toLocaleDateString('bn-BD'),
-            operatorName: "রাহিম উদ্দিন",
-            unionName: "",
-            villageName: "",
-            farmerName: "",
-            farmerPhone: "",
-            cropType: "",
-            landArea: "",
-            cropHealth: "good",
-            diseases: [],
-            fertilizers: [],
-            pesticides: [],
-            notes: "",
-            marketPrice: 0,
-            status: "draft"
-        });
-
-        toast({
-            title: "সফল",
-            description: "ফিল্ড রিপোর্ট সফলভাবে জমা দেওয়া হয়েছে",
-        });
-
-        setActiveTab("reports");
-    };
-
-    const handleViewReport = (report: FieldReport) => {
-        setSelectedReport(report);
-        setIsViewOpen(true);
-    };
-
-    const addFertilizer = () => {
-        const fertilizers = newReport.fertilizers || [];
-        setNewReport({
-            ...newReport,
-            fertilizers: [...fertilizers, { name: "", quantity: "", date: "" }]
-        });
-    };
-
-    const addPesticide = () => {
-        const pesticides = newReport.pesticides || [];
-        setNewReport({
-            ...newReport,
-            pesticides: [...pesticides, { name: "", quantity: "", date: "" }]
-        });
-    };
-
-    return (
-        <Card>
+        {/* Form */}
+        {showForm && (
+          <Card className="mb-6">
             <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                    <ClipboardList className="h-5 w-5" />
-                    ফিল্ড ডেটা সংগ্রহ ও রিপোর্টিং
-                </CardTitle>
-                <CardDescription>
-                    ইউনিয়ন পর্যায়ে কৃষকদের তথ্য সংগ্রহ করুন এবং সরকারের কাছে রিপোর্ট পাঠান
-                </CardDescription>
+              <CardTitle>নতুন মাঠ রিপোর্ট</CardTitle>
             </CardHeader>
             <CardContent>
-                <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-                    <TabsList className="grid w-full grid-cols-2">
-                        <TabsTrigger value="new-report">নতুন রিপোর্ট</TabsTrigger>
-                        <TabsTrigger value="reports">রিপোর্ট তালিকা</TabsTrigger>
-                    </TabsList>
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Location Selector */}
+                <div className="space-y-4">
+                  <Label>এলাকা নির্বাচন করুন</Label>
+                  <LocationSelector
+                    onLocationSelect={handleLocationSelect}
+                    initialPostalCode={formData.postal_code || undefined}
+                  />
+                  {location && (
+                    <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
+                      <MapPin className="inline h-4 w-4 mr-1" />
+                      {location.division_bn}, {location.district_bn}, {location.upazila_bn}, {location.post_office_bn}
+                    </div>
+                  )}
+                </div>
 
-                    {/* নতুন রিপোর্ট */}
-                    <TabsContent value="new-report" className="space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {/* মৌলিক তথ্য */}
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle className="text-lg">মৌলিক তথ্য</CardTitle>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
-                                    <div>
-                                        <Label>ইউনিয়ন</Label>
-                                        <Input
-                                            value={newReport.unionName || ""}
-                                            onChange={(e) => setNewReport({ ...newReport, unionName: e.target.value })}
-                                            placeholder="ইউনিয়নের নাম"
-                                        />
-                                    </div>
-                                    <div>
-                                        <Label>গ্রাম</Label>
-                                        <Input
-                                            value={newReport.villageName || ""}
-                                            onChange={(e) => setNewReport({ ...newReport, villageName: e.target.value })}
-                                            placeholder="গ্রামের নাম"
-                                        />
-                                    </div>
-                                    <div>
-                                        <Label>কৃষকের নাম</Label>
-                                        <Input
-                                            value={newReport.farmerName || ""}
-                                            onChange={(e) => setNewReport({ ...newReport, farmerName: e.target.value })}
-                                            placeholder="কৃষকের পূর্ণ নাম"
-                                        />
-                                    </div>
-                                    <div>
-                                        <Label>কৃষকের ফোন</Label>
-                                        <Input
-                                            value={newReport.farmerPhone || ""}
-                                            onChange={(e) => setNewReport({ ...newReport, farmerPhone: e.target.value })}
-                                            placeholder="০১XXXXXXXXX"
-                                        />
-                                    </div>
-                                </CardContent>
-                            </Card>
+                {/* Village Name */}
+                <div>
+                  <Label htmlFor="village">গ্রামের নাম *</Label>
+                  <Input
+                    id="village"
+                    value={formData.village}
+                    onChange={(e) => setFormData({ ...formData, village: e.target.value })}
+                    placeholder="গ্রামের নাম লিখুন"
+                    required
+                  />
+                </div>
 
-                            {/* ফসলের তথ্য */}
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle className="text-lg">ফসলের তথ্য</CardTitle>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
-                                    <div>
-                                        <Label>ফসলের ধরন</Label>
-                                        <Select onValueChange={(value) => setNewReport({ ...newReport, cropType: value })}>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="ফসল নির্বাচন করুন" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {cropTypes.map((crop) => (
-                                                    <SelectItem key={crop} value={crop}>{crop}</SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                    <div>
-                                        <Label>জমির পরিমাণ</Label>
-                                        <Input
-                                            value={newReport.landArea || ""}
-                                            onChange={(e) => setNewReport({ ...newReport, landArea: e.target.value })}
-                                            placeholder="যেমন: ৩ বিঘা"
-                                        />
-                                    </div>
-                                    <div>
-                                        <Label>ফসলের স্বাস্থ্য</Label>
-                                        <Select
-                                            value={newReport.cropHealth || "good"}
-                                            onValueChange={(value) => setNewReport({ ...newReport, cropHealth: value as any })}
-                                        >
-                                            <SelectTrigger>
-                                                <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="excellent">চমৎকার</SelectItem>
-                                                <SelectItem value="good">ভালো</SelectItem>
-                                                <SelectItem value="fair">মোটামুটি</SelectItem>
-                                                <SelectItem value="poor">খারাপ</SelectItem>
-                                                <SelectItem value="critical">সংকটাপন্ন</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                    <div>
-                                        <Label>বাজার দর (কেজি প্রতি টাকা)</Label>
-                                        <Input
-                                            type="number"
-                                            value={newReport.marketPrice || ""}
-                                            onChange={(e) => setNewReport({ ...newReport, marketPrice: Number(e.target.value) })}
-                                            placeholder="বর্তমান বাজার দর"
-                                        />
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        </div>
+                {/* Date */}
+                <div>
+                  <Label htmlFor="report_date">তারিখ *</Label>
+                  <Input
+                    id="report_date"
+                    type="date"
+                    value={formData.report_date}
+                    onChange={(e) => setFormData({ ...formData, report_date: e.target.value })}
+                    required
+                  />
+                </div>
 
-                        {/* রোগ ও পোকামাকড় */}
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="text-lg flex items-center gap-2">
-                                    <Bug className="h-4 w-4" />
-                                    রোগ ও পোকামাকড়
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                                    {commonDiseases.map((disease) => (
-                                        <label key={disease} className="flex items-center space-x-2 cursor-pointer">
-                                            <input
-                                                type="checkbox"
-                                                checked={(newReport.diseases || []).includes(disease)}
-                                                onChange={(e) => {
-                                                    const diseases = newReport.diseases || [];
-                                                    if (e.target.checked) {
-                                                        setNewReport({ ...newReport, diseases: [...diseases, disease] });
-                                                    } else {
-                                                        setNewReport({ ...newReport, diseases: diseases.filter(d => d !== disease) });
-                                                    }
-                                                }}
-                                                className="rounded"
-                                            />
-                                            <span className="text-sm">{disease}</span>
-                                        </label>
-                                    ))}
-                                </div>
-                            </CardContent>
-                        </Card>
+                {/* Weather Condition */}
+                <div>
+                  <Label htmlFor="weather_condition">আবহাওয়ার অবস্থা *</Label>
+                  <Select
+                    value={formData.weather_condition}
+                    onValueChange={(value) => setFormData({ ...formData, weather_condition: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="আবহাওয়া নির্বাচন করুন" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="sunny">☀️ রৌদ্রজ্জ্বল</SelectItem>
+                      <SelectItem value="cloudy">☁️ মেঘলা</SelectItem>
+                      <SelectItem value="rainy">🌧️ বৃষ্টি</SelectItem>
+                      <SelectItem value="stormy">⛈️ ঝড়</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-                        {/* সার ও কীটনাশক */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle className="text-lg flex items-center justify-between">
-                                        সার ব্যবহার
-                                        <Button size="sm" onClick={addFertilizer}>
-                                            <Plus className="h-3 w-3 mr-1" />যোগ করুন
-                                        </Button>
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent className="space-y-3">
-                                    {(newReport.fertilizers || []).map((fertilizer, index) => (
-                                        <div key={index} className="grid grid-cols-3 gap-2 p-2 border rounded">
-                                            <Input
-                                                placeholder="সারের নাম"
-                                                value={fertilizer.name}
-                                                onChange={(e) => {
-                                                    const fertilizers = [...(newReport.fertilizers || [])];
-                                                    fertilizers[index] = { ...fertilizer, name: e.target.value };
-                                                    setNewReport({ ...newReport, fertilizers });
-                                                }}
-                                            />
-                                            <Input
-                                                placeholder="পরিমাণ"
-                                                value={fertilizer.quantity}
-                                                onChange={(e) => {
-                                                    const fertilizers = [...(newReport.fertilizers || [])];
-                                                    fertilizers[index] = { ...fertilizer, quantity: e.target.value };
-                                                    setNewReport({ ...newReport, fertilizers });
-                                                }}
-                                            />
-                                            <Input
-                                                placeholder="তারিখ"
-                                                value={fertilizer.date}
-                                                onChange={(e) => {
-                                                    const fertilizers = [...(newReport.fertilizers || [])];
-                                                    fertilizers[index] = { ...fertilizer, date: e.target.value };
-                                                    setNewReport({ ...newReport, fertilizers });
-                                                }}
-                                            />
-                                        </div>
-                                    ))}
-                                </CardContent>
-                            </Card>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Temperature */}
+                  <div>
+                    <Label htmlFor="temperature">তাপমাত্রা (°সে)</Label>
+                    <Input
+                      id="temperature"
+                      type="number"
+                      step="0.1"
+                      value={formData.temperature}
+                      onChange={(e) => setFormData({ ...formData, temperature: e.target.value })}
+                      placeholder="যেমন: 28.5"
+                    />
+                  </div>
 
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle className="text-lg flex items-center justify-between">
-                                        কীটনাশক ব্যবহার
-                                        <Button size="sm" onClick={addPesticide}>
-                                            <Plus className="h-3 w-3 mr-1" />যোগ করুন
-                                        </Button>
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent className="space-y-3">
-                                    {(newReport.pesticides || []).map((pesticide, index) => (
-                                        <div key={index} className="grid grid-cols-3 gap-2 p-2 border rounded">
-                                            <Input
-                                                placeholder="কীটনাশকের নাম"
-                                                value={pesticide.name}
-                                                onChange={(e) => {
-                                                    const pesticides = [...(newReport.pesticides || [])];
-                                                    pesticides[index] = { ...pesticide, name: e.target.value };
-                                                    setNewReport({ ...newReport, pesticides });
-                                                }}
-                                            />
-                                            <Input
-                                                placeholder="পরিমাণ"
-                                                value={pesticide.quantity}
-                                                onChange={(e) => {
-                                                    const pesticides = [...(newReport.pesticides || [])];
-                                                    pesticides[index] = { ...pesticide, quantity: e.target.value };
-                                                    setNewReport({ ...newReport, pesticides });
-                                                }}
-                                            />
-                                            <Input
-                                                placeholder="তারিখ"
-                                                value={pesticide.date}
-                                                onChange={(e) => {
-                                                    const pesticides = [...(newReport.pesticides || [])];
-                                                    pesticides[index] = { ...pesticide, date: e.target.value };
-                                                    setNewReport({ ...newReport, pesticides });
-                                                }}
-                                            />
-                                        </div>
-                                    ))}
-                                </CardContent>
-                            </Card>
-                        </div>
+                  {/* Rainfall */}
+                  <div>
+                    <Label htmlFor="rainfall">বৃষ্টিপাত (মিমি)</Label>
+                    <Input
+                      id="rainfall"
+                      type="number"
+                      step="0.1"
+                      value={formData.rainfall}
+                      onChange={(e) => setFormData({ ...formData, rainfall: e.target.value })}
+                      placeholder="যেমন: 15.5"
+                    />
+                  </div>
+                </div>
 
-                        {/* মন্তব্য ও জমা */}
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="text-lg">অতিরিক্ত মন্তব্য</CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <Textarea
-                                    value={newReport.notes || ""}
-                                    onChange={(e) => setNewReport({ ...newReport, notes: e.target.value })}
-                                    placeholder="ফসলের অবস্থা, সমস্যা বা বিশেষ কোনো তথ্য লিখুন..."
-                                    className="min-h-[100px]"
-                                />
-                                <div className="flex justify-end space-x-2">
-                                    <Button variant="outline">
-                                        <Camera className="h-4 w-4 mr-2" />
-                                        ছবি যোগ করুন
-                                    </Button>
-                                    <Button onClick={handleSubmitReport} className="bg-green-600 hover:bg-green-700">
-                                        <Send className="h-4 w-4 mr-2" />
-                                        রিপোর্ট জমা দিন
-                                    </Button>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </TabsContent>
+                {/* Soil Moisture */}
+                <div>
+                  <Label htmlFor="soil_moisture">মাটির আর্দ্রতা</Label>
+                  <Select
+                    value={formData.soil_moisture}
+                    onValueChange={(value) => setFormData({ ...formData, soil_moisture: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="মাটির আর্দ্রতা নির্বাচন করুন" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="dry">শুষ্ক</SelectItem>
+                      <SelectItem value="moderate">মাঝারি</SelectItem>
+                      <SelectItem value="wet">ভেজা</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-                    {/* রিপোর্ট তালিকা */}
-                    <TabsContent value="reports" className="space-y-4">
-                        <div className="flex justify-between items-center">
-                            <h3 className="text-lg font-medium">জমাদানকৃত রিপোর্ট ({fieldReports.length})</h3>
-                        </div>
+                {/* Irrigation Status */}
+                <div>
+                  <Label htmlFor="irrigation_status">সেচের অবস্থা</Label>
+                  <Select
+                    value={formData.irrigation_status}
+                    onValueChange={(value) => setFormData({ ...formData, irrigation_status: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="সেচের অবস্থা নির্বাচন করুন" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="good">ভালো</SelectItem>
+                      <SelectItem value="moderate">মাঝারি</SelectItem>
+                      <SelectItem value="poor">খারাপ</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-                        <div className="space-y-3">
-                            {fieldReports.map((report) => (
-                                <Card key={report.id} className="hover:bg-gray-50 cursor-pointer">
-                                    <CardContent className="p-4">
-                                        <div className="flex items-center justify-between">
-                                            <div className="space-y-1">
-                                                <div className="flex items-center space-x-4">
-                                                    <h4 className="font-medium">{report.farmerName}</h4>
-                                                    <Badge variant="outline">{report.cropType}</Badge>
-                                                    {getHealthBadge(report.cropHealth)}
-                                                    {getStatusBadge(report.status)}
-                                                </div>
-                                                <div className="flex items-center space-x-4 text-sm text-gray-600">
-                                                    <span className="flex items-center">
-                                                        <MapPin className="h-3 w-3 mr-1" />
-                                                        {report.villageName}, {report.unionName}
-                                                    </span>
-                                                    <span className="flex items-center">
-                                                        <Calendar className="h-3 w-3 mr-1" />
-                                                        {report.reportDate}
-                                                    </span>
-                                                    <span>{report.landArea}</span>
-                                                </div>
-                                                {report.diseases.length > 0 && (
-                                                    <div className="flex items-center space-x-2 text-sm">
-                                                        <AlertTriangle className="h-3 w-3 text-orange-500" />
-                                                        <span className="text-orange-600">রোগ: {report.diseases.join(", ")}</span>
-                                                    </div>
-                                                )}
-                                            </div>
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                onClick={() => handleViewReport(report)}
-                                            >
-                                                <Eye className="h-3 w-3 mr-1" />
-                                                বিস্তারিত
-                                            </Button>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            ))}
-                        </div>
-                    </TabsContent>
-                </Tabs>
+                {/* Crop Condition */}
+                <div>
+                  <Label htmlFor="crop_condition">ফসলের অবস্থা</Label>
+                  <Textarea
+                    id="crop_condition"
+                    value={formData.crop_condition}
+                    onChange={(e) => setFormData({ ...formData, crop_condition: e.target.value })}
+                    placeholder="ফসলের বর্তমান অবস্থা বর্ণনা করুন"
+                    rows={3}
+                  />
+                </div>
 
-                {/* বিস্তারিত রিপোর্ট ডায়ালগ */}
-                <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
-                    <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-                        <DialogHeader>
-                            <DialogTitle>ফিল্ড রিপোর্ট বিস্তারিত</DialogTitle>
-                            <DialogDescription>
-                                {selectedReport?.farmerName} - {selectedReport?.reportDate}
-                            </DialogDescription>
-                        </DialogHeader>
-                        {selectedReport && (
-                            <div className="space-y-4">
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                    <div>
-                                        <Label className="font-medium">ইউনিয়ন</Label>
-                                        <p className="text-sm">{selectedReport.unionName}</p>
-                                    </div>
-                                    <div>
-                                        <Label className="font-medium">গ্রাম</Label>
-                                        <p className="text-sm">{selectedReport.villageName}</p>
-                                    </div>
-                                    <div>
-                                        <Label className="font-medium">ফসল</Label>
-                                        <p className="text-sm">{selectedReport.cropType}</p>
-                                    </div>
-                                    <div>
-                                        <Label className="font-medium">জমির পরিমাণ</Label>
-                                        <p className="text-sm">{selectedReport.landArea}</p>
-                                    </div>
-                                </div>
+                {/* Pest/Disease */}
+                <div>
+                  <Label htmlFor="pest_disease">পোকামাকড় / রোগবালাই</Label>
+                  <Textarea
+                    id="pest_disease"
+                    value={formData.pest_disease}
+                    onChange={(e) => setFormData({ ...formData, pest_disease: e.target.value })}
+                    placeholder="পোকামাকড় বা রোগবালাইয়ের তথ্য লিখুন"
+                    rows={3}
+                  />
+                </div>
 
-                                <div>
-                                    <Label className="font-medium">ফসলের স্বাস্থ্য</Label>
-                                    <div className="mt-1">{getHealthBadge(selectedReport.cropHealth)}</div>
-                                </div>
+                {/* Notes */}
+                <div>
+                  <Label htmlFor="notes">অতিরিক্ত মন্তব্য</Label>
+                  <Textarea
+                    id="notes"
+                    value={formData.notes}
+                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                    placeholder="অন্যান্য গুরুত্বপূর্ণ তথ্য"
+                    rows={3}
+                  />
+                </div>
 
-                                {selectedReport.diseases.length > 0 && (
-                                    <div>
-                                        <Label className="font-medium">চিহ্নিত রোগ</Label>
-                                        <div className="flex flex-wrap gap-1 mt-1">
-                                            {selectedReport.diseases.map((disease, index) => (
-                                                <Badge key={index} variant="destructive">{disease}</Badge>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {selectedReport.fertilizers.length > 0 && (
-                                        <div>
-                                            <Label className="font-medium">ব্যবহৃত সার</Label>
-                                            <div className="space-y-1 mt-1">
-                                                {selectedReport.fertilizers.map((fertilizer, index) => (
-                                                    <div key={index} className="text-sm bg-gray-50 p-2 rounded">
-                                                        {fertilizer.name} - {fertilizer.quantity} ({fertilizer.date})
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {selectedReport.pesticides.length > 0 && (
-                                        <div>
-                                            <Label className="font-medium">ব্যবহৃত কীটনাশক</Label>
-                                            <div className="space-y-1 mt-1">
-                                                {selectedReport.pesticides.map((pesticide, index) => (
-                                                    <div key={index} className="text-sm bg-gray-50 p-2 rounded">
-                                                        {pesticide.name} - {pesticide.quantity} ({pesticide.date})
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-
-                                {selectedReport.notes && (
-                                    <div>
-                                        <Label className="font-medium">মন্তব্য</Label>
-                                        <p className="text-sm mt-1 p-2 bg-gray-50 rounded">{selectedReport.notes}</p>
-                                    </div>
-                                )}
-
-                                <div className="flex justify-end space-x-2">
-                                    <Button variant="outline" onClick={() => setIsViewOpen(false)}>
-                                        বন্ধ করুন
-                                    </Button>
-                                </div>
-                            </div>
-                        )}
-                    </DialogContent>
-                </Dialog>
+                <div className="flex gap-4">
+                  <Button type="submit" disabled={loading} className="bg-orange-600 hover:bg-orange-700">
+                    {loading ? 'সংরক্ষণ হচ্ছে...' : 'রিপোর্ট সংরক্ষণ করুন'}
+                  </Button>
+                  <Button type="button" variant="outline" onClick={() => setShowForm(false)}>
+                    বাতিল
+                  </Button>
+                </div>
+              </form>
             </CardContent>
+          </Card>
+        )}
+
+        {/* Reports List */}
+        <Card>
+          <CardHeader>
+            <CardTitle>সংরক্ষিত রিপোর্ট</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {loading && reports.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-orange-600 border-r-transparent"></div>
+                <p className="mt-4 text-gray-600">লোড হচ্ছে...</p>
+              </div>
+            ) : reports.length === 0 ? (
+              <div className="text-center py-12 text-gray-500">
+                <CloudSun className="h-16 w-16 mx-auto mb-4 text-gray-400" />
+                <p>কোন রিপোর্ট পাওয়া যায়নি</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {reports.map((report) => (
+                  <Card key={report.report_id} className="hover:shadow-lg transition-shadow">
+                    <CardContent className="p-4">
+                      <div className="space-y-3">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <h3 className="font-semibold text-lg">{report.village}</h3>
+                            <p className="text-sm text-gray-600">
+                              {report.location_info?.upazila_bn}, {report.location_info?.district_bn}
+                            </p>
+                          </div>
+                          <Badge className={getWeatherBadgeColor(report.weather_condition)}>
+                            {getWeatherIcon(report.weather_condition)}
+                          </Badge>
+                        </div>
+
+                        <div className="flex items-center gap-4 text-sm text-gray-600">
+                          {report.temperature && (
+                            <div className="flex items-center gap-1">
+                              <Thermometer className="h-4 w-4" />
+                              {report.temperature}°সে
+                            </div>
+                          )}
+                          {report.rainfall && (
+                            <div className="flex items-center gap-1">
+                              <Droplets className="h-4 w-4" />
+                              {report.rainfall} মিমি
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="text-sm text-gray-600">
+                          <Calendar className="inline h-4 w-4 mr-1" />
+                          {new Date(report.report_date).toLocaleDateString('bn-BD')}
+                        </div>
+
+                        <div className="flex gap-2 pt-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setSelectedReport(report);
+                              setIsViewOpen(true);
+                            }}
+                          >
+                            <Eye className="h-4 w-4 mr-1" />
+                            বিস্তারিত
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-red-600 hover:text-red-700"
+                            onClick={() => handleDelete(report.report_id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </CardContent>
         </Card>
-    );
+      </div>
+
+      {/* View Details Dialog */}
+      <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>রিপোর্টের বিস্তারিত তথ্য</DialogTitle>
+            <DialogDescription>
+              মাঠ পর্যায়ের সংগৃহীত তথ্য
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedReport && (
+            <div className="space-y-4">
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h3 className="font-semibold text-lg mb-2">{selectedReport.village}</h3>
+                <p className="text-sm text-gray-600">
+                  {selectedReport.location_info?.division_bn} › {selectedReport.location_info?.district_bn} › {selectedReport.location_info?.upazila_bn}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm text-gray-500">তারিখ</Label>
+                  <p className="font-medium">{new Date(selectedReport.report_date).toLocaleDateString('bn-BD')}</p>
+                </div>
+                <div>
+                  <Label className="text-sm text-gray-500">আবহাওয়া</Label>
+                  <p className="font-medium">
+                    {getWeatherIcon(selectedReport.weather_condition)} {
+                      selectedReport.weather_condition === 'sunny' ? 'রৌদ্রজ্জ্বল' :
+                      selectedReport.weather_condition === 'cloudy' ? 'মেঘলা' :
+                      selectedReport.weather_condition === 'rainy' ? 'বৃষ্টি' : 'ঝড়'
+                    }
+                  </p>
+                </div>
+                {selectedReport.temperature && (
+                  <div>
+                    <Label className="text-sm text-gray-500">তাপমাত্রা</Label>
+                    <p className="font-medium">{selectedReport.temperature}°সে</p>
+                  </div>
+                )}
+                {selectedReport.rainfall && (
+                  <div>
+                    <Label className="text-sm text-gray-500">বৃষ্টিপাত</Label>
+                    <p className="font-medium">{selectedReport.rainfall} মিমি</p>
+                  </div>
+                )}
+                {selectedReport.soil_moisture && (
+                  <div>
+                    <Label className="text-sm text-gray-500">মাটির আর্দ্রতা</Label>
+                    <p className="font-medium">
+                      {selectedReport.soil_moisture === 'dry' ? 'শুষ্ক' :
+                       selectedReport.soil_moisture === 'moderate' ? 'মাঝারি' : 'ভেজা'}
+                    </p>
+                  </div>
+                )}
+                {selectedReport.irrigation_status && (
+                  <div>
+                    <Label className="text-sm text-gray-500">সেচের অবস্থা</Label>
+                    <p className="font-medium">
+                      {selectedReport.irrigation_status === 'good' ? 'ভালো' :
+                       selectedReport.irrigation_status === 'moderate' ? 'মাঝারি' : 'খারাপ'}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {selectedReport.crop_condition && (
+                <div>
+                  <Label className="text-sm text-gray-500">ফসলের অবস্থা</Label>
+                  <p className="mt-1 text-sm bg-gray-50 p-3 rounded">{selectedReport.crop_condition}</p>
+                </div>
+              )}
+
+              {selectedReport.pest_disease && (
+                <div>
+                  <Label className="text-sm text-gray-500">পোকামাকড় / রোগবালাই</Label>
+                  <p className="mt-1 text-sm bg-gray-50 p-3 rounded">{selectedReport.pest_disease}</p>
+                </div>
+              )}
+
+              {selectedReport.notes && (
+                <div>
+                  <Label className="text-sm text-gray-500">অতিরিক্ত মন্তব্য</Label>
+                  <p className="mt-1 text-sm bg-gray-50 p-3 rounded">{selectedReport.notes}</p>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
 };
 
 export default FieldDataCollection;

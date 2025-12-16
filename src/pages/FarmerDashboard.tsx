@@ -23,7 +23,8 @@ import {
     ChevronRight,
     Bell,
     Sprout,
-    Clock
+    Clock,
+    CheckCircle
 } from "lucide-react";
 import {
     fetchWeatherOneCall,
@@ -337,12 +338,28 @@ const FarmerDashboard = () => {
                         <div className="absolute -right-4 top-12 w-20 h-20 bg-green-300/20 dark:bg-green-500/10 rounded-full blur-sm"></div>
 
                         <div className="flex items-center gap-4 relative z-10">
-                            <Avatar className="h-16 w-16 border-2 border-green-400/40 shadow-lg ring-2 ring-green-300/30">
-                                <AvatarImage src={getProfilePhotoUrl(user?.profilePhoto)} alt={user?.name} />
-                                <AvatarFallback className="bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 text-xl font-bold">
-                                    {user?.name?.charAt(0)?.toUpperCase() || 'U'}
-                                </AvatarFallback>
-                            </Avatar>
+                            <div className="relative">
+                                <Avatar className="h-16 w-16 border-2 border-green-400/40 shadow-lg ring-2 ring-green-300/30">
+                                    <AvatarImage src={getProfilePhotoUrl(user?.profilePhoto)} alt={user?.name} />
+                                    <AvatarFallback className="bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 text-xl font-bold">
+                                        {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+                                    </AvatarFallback>
+                                </Avatar>
+                                {user?.verificationStatus && (
+                                    <>
+                                        {user.verificationStatus === 'approved' && (
+                                            <div className="absolute -bottom-1 -right-1 bg-green-500 rounded-full p-1 shadow-md">
+                                                <CheckCircle className="h-4 w-4 text-white" />
+                                            </div>
+                                        )}
+                                        {user.verificationStatus === 'pending' && (
+                                            <div className="absolute -bottom-1 -right-1 bg-yellow-500 rounded-full p-1 shadow-md">
+                                                <Clock className="h-4 w-4 text-white" />
+                                            </div>
+                                        )}
+                                    </>
+                                )}
+                            </div>
                             <div className="flex-1">
                                 <p className="text-green-600 dark:text-green-400 text-sm font-medium">স্বাগতম,</p>
                                 <h1 className="text-2xl font-bold tracking-tight text-green-800 dark:text-green-100">{user?.name || 'কৃষক ভাই'}</h1>

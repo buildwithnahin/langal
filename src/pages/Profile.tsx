@@ -24,7 +24,11 @@ import {
     DollarSign,
     Tractor,
     Droplets,
-    Package
+    Package,
+    CheckCircle,
+    XCircle,
+    Clock,
+    AlertCircle
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
@@ -54,6 +58,7 @@ const Profile = () => {
         experience: "",
         bio: "",
         profilePhotoUrl: "",
+        verificationStatus: "pending" as 'pending' | 'approved' | 'rejected',
         // কৃষি সংক্রান্ত নতুন তথ্য
         currentCrops: [
             { name: "আমন ধান", season: "২০২৪-২৫", area: "৩ একর", status: "চলমান", expectedHarvest: "ডিসেম্বর ২০২৪" },
@@ -94,6 +99,7 @@ const Profile = () => {
                         address: profile.address || "",
                         dateOfBirth: profile.date_of_birth || "",
                         profilePhotoUrl: profile.profile_photo_url_full || "",
+                        verificationStatus: profile.verification_status || "pending",
                         occupation: additionalInfo.occupation || "কৃষক",
                         farmSize: farmer.farm_size ? String(farmer.farm_size) : "",
                         crops: farmer.farm_type || "",
@@ -242,6 +248,16 @@ const Profile = () => {
                 setSelectedProfilePhoto(null);
                 setPreviewUrl("");
 
+                // Update AuthContext with new verification status
+                if (user) {
+                    setAuthUser({
+                        ...user,
+                        name: profile.full_name || user.name,
+                        profilePhoto: profile.profile_photo_url_full || user.profilePhoto,
+                        verificationStatus: profile.verification_status || 'pending'
+                    }, localStorage.getItem('auth_token') || '');
+                }
+
                 toast({
                     title: "সফল",
                     description: "প্রোফাইল সফলভাবে আপডেট করা হয়েছে",
@@ -296,6 +312,49 @@ const Profile = () => {
                         </Button>
                     </div>
 
+                    {/* Verification Status Alerts */}
+                    {profileData.verificationStatus === 'approved' && (
+                        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                            <div className="flex items-start">
+                                <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 mr-3 flex-shrink-0" />
+                                <div>
+                                    <h4 className="text-sm font-medium text-green-800">প্রোফাইল যাচাইকৃত</h4>
+                                    <p className="text-sm text-green-700 mt-1">
+                                        আপনার প্রোফাইল সফলভাবে যাচাই করা হয়েছে। আপনি সকল সেবা ব্যবহার করতে পারবেন।
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {profileData.verificationStatus === 'pending' && (
+                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                            <div className="flex items-start">
+                                <Clock className="h-5 w-5 text-yellow-600 mt-0.5 mr-3 flex-shrink-0" />
+                                <div>
+                                    <h4 className="text-sm font-medium text-yellow-800">যাচাই মুলতবি</h4>
+                                    <p className="text-sm text-yellow-700 mt-1">
+                                        আপনার প্রোফাইল যাচাইয়ের জন্য অপেক্ষমাণ। অনুগ্রহ করে কিছুক্ষণ অপেক্ষা করুন।
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {profileData.verificationStatus === 'rejected' && (
+                        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                            <div className="flex items-start">
+                                <AlertCircle className="h-5 w-5 text-red-600 mt-0.5 mr-3 flex-shrink-0" />
+                                <div>
+                                    <h4 className="text-sm font-medium text-red-800">প্রোফাইল প্রত্যাখ্যাত</h4>
+                                    <p className="text-sm text-red-700 mt-1">
+                                        আপনার প্রোফাইল প্রত্যাখ্যাত হয়েছে। সঠিক তথ্য দিয়ে পুনরায় আপডেট করার জন্য অনুগ্রহ করে নিকটস্থ কৃষি অফিসে যোগাযোগ করুন।
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Profile Header */}
                     <Card>
                         <CardContent className="pt-6">
@@ -333,7 +392,27 @@ const Profile = () => {
                                 </div>
 
                                 <div className="flex-1 text-center md:text-left">
-                                    <h1 className="text-2xl font-bold">{profileData.name}</h1>
+                                    <div className="flex items-center justify-center md:justify-start gap-2">
+                                        <h1 className="text-2xl font-bold">{profileData.name}</h1>
+                                        {profileData.verificationStatus === 'approved' && (
+                                            <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
+                                                <CheckCircle className="mr-1 h-3 w-3" />
+                                                যাচাইকৃত
+                                            </Badge>
+                                        )}
+                                        {profileData.verificationStatus === 'pending' && (
+                                            <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">
+                                                <Clock className="mr-1 h-3 w-3" />
+                                                মুলতবি
+                                            </Badge>
+                                        )}
+                                        {profileData.verificationStatus === 'rejected' && (
+                                            <Badge className="bg-red-100 text-red-800 hover:bg-red-100">
+                                                <XCircle className="mr-1 h-3 w-3" />
+                                                প্রত্যাখ্যাত
+                                            </Badge>
+                                        )}
+                                    </div>
                                     <p className="text-muted-foreground">{profileData.occupation}</p>
                                     <div className="flex flex-wrap justify-center md:justify-start gap-2 mt-2">
                                         <Badge variant="secondary">{profileData.experience} অভিজ্ঞতা</Badge>

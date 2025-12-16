@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\FarmerAuthController;
 use App\Http\Controllers\Api\CustomerAuthController;
 use App\Http\Controllers\Api\ExpertAuthController;
+use App\Http\Controllers\Api\DataOperatorAuthController;
 use App\Http\Controllers\Api\MarketplaceController;
 use App\Http\Controllers\Api\ImageUploadController;
 use App\Http\Controllers\Api\LocationController;
@@ -123,6 +124,36 @@ Route::prefix('expert')->group(function () {
 Route::prefix('experts')->group(function () {
     Route::get('/', [ExpertAuthController::class, 'getAllExperts']);
     Route::get('/{expert_id}', [ExpertAuthController::class, 'getExpertById']);
+});
+
+// Data Operator Authentication Routes
+Route::prefix('data-operator')->group(function () {
+    // Public routes (no authentication required)
+    Route::post('/send-otp', [DataOperatorAuthController::class, 'sendOtp']);
+    Route::post('/register', [DataOperatorAuthController::class, 'register']);
+    Route::post('/login', [DataOperatorAuthController::class, 'login']);
+
+    // Protected routes (authentication required)
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('/profile', [DataOperatorAuthController::class, 'profile']);
+        Route::post('/update-profile', [DataOperatorAuthController::class, 'updateProfile']);
+        Route::post('/logout', [DataOperatorAuthController::class, 'logout']);
+        
+        // Profile verification routes
+        Route::get('/farmers', [DataOperatorAuthController::class, 'getFarmers']);
+        Route::get('/customers', [DataOperatorAuthController::class, 'getCustomers']);
+        Route::post('/verify-profile', [DataOperatorAuthController::class, 'verifyProfile']);
+        
+        // Field data collection routes
+        Route::get('/field-reports', [DataOperatorAuthController::class, 'getFieldReports']);
+        Route::post('/field-reports', [DataOperatorAuthController::class, 'createFieldReport']);
+        Route::delete('/field-reports/{reportId}', [DataOperatorAuthController::class, 'deleteFieldReport']);
+        
+        // Soil test reports routes
+        Route::get('/soil-tests', [DataOperatorAuthController::class, 'getSoilTestReports']);
+        Route::post('/soil-tests', [DataOperatorAuthController::class, 'createSoilTestReport']);
+        Route::delete('/soil-tests/{reportId}', [DataOperatorAuthController::class, 'deleteSoilTestReport']);
+    });
 });
 
 // Test route for authenticated farmer
