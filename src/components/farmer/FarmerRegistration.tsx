@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -461,8 +461,7 @@ const FarmerRegistration = () => {
                 phone: user.phone,
                 profilePhoto: user.profile?.profile_photo_url_full,
                 location: user.profile?.address || 'Bangladesh',
-                location_info: user.location_info || undefined,
-                verificationStatus: user.profile?.verification_status || 'pending'
+                location_info: user.location_info || undefined
             };
 
             // Set user in context
@@ -929,8 +928,8 @@ const FarmerRegistration = () => {
                     <Label className="text-base font-medium">ঠিকানা *</Label>
                     <LocationSelector
                         value={farmerFormData.location}
-                        onChange={useCallback((location) => setFarmerFormData(prev => ({ ...prev, location })), [])}
-                        onAddressChange={useCallback((address) => setFarmerFormData(prev => ({ ...prev, address })), [])}
+                        onChange={(location) => setFarmerFormData(prev => ({ ...prev, location }))}
+                        onAddressChange={(address) => setFarmerFormData(prev => ({ ...prev, address }))}
                     />
                     {farmerFormData.address && (
                         <div className="mt-2 p-3 bg-blue-50 rounded border border-blue-200">

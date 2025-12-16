@@ -73,9 +73,9 @@ const LocationSelector = ({ value, onChange, onAddressChange }: LocationSelector
         loadDivisions();
     }, []);
 
-    // Update full address whenever location value changes
+    // Update full address whenever location changes
     useEffect(() => {
-        if (value) {
+        if (value && onAddressChange) {
             const addressParts = [];
             if (value.village) addressParts.push(value.village);
             if (value.post_office_bn) addressParts.push(value.post_office_bn);
@@ -83,11 +83,9 @@ const LocationSelector = ({ value, onChange, onAddressChange }: LocationSelector
             if (value.district_bn) addressParts.push(value.district_bn);
 
             const fullAddress = addressParts.join(', ');
-            if (onAddressChange) {
-                onAddressChange(fullAddress);
-            }
+            onAddressChange(fullAddress);
         }
-    }, [value?.village, value?.post_office_bn, value?.upazila_bn, value?.district_bn]);
+    }, [value, onAddressChange]);
 
     const loadDivisions = async () => {
         try {
