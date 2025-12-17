@@ -13,7 +13,7 @@ class ImageUploadController extends Controller
 {
     /**
      * Upload single or multiple images for marketplace listings
-     * 
+     *
      * @param Request $request
      * @return JsonResponse
      */
@@ -36,7 +36,7 @@ class ImageUploadController extends Controller
 
         try {
             $images = $request->file('images');
-            
+
             // Handle single image upload
             if (!is_array($images)) {
                 $images = [$images];
@@ -45,10 +45,10 @@ class ImageUploadController extends Controller
             foreach ($images as $image) {
                 // Generate unique filename
                 $filename = Str::uuid() . '.' . $image->getClientOriginalExtension();
-                
+
                 // Store in storage/app/public/marketplace
                 $path = $image->storeAs('marketplace', $filename, 'public');
-                
+
                 // Return public URL
                 $uploadedPaths[] = [
                     'path' => $path,
@@ -73,7 +73,7 @@ class ImageUploadController extends Controller
 
     /**
      * Delete an image from storage
-     * 
+     *
      * @param Request $request
      * @return JsonResponse
      */
@@ -103,7 +103,7 @@ class ImageUploadController extends Controller
         try {
             if (Storage::disk('public')->exists($path)) {
                 Storage::disk('public')->delete($path);
-                
+
                 return response()->json([
                     'success' => true,
                     'message' => 'Image deleted successfully',
@@ -125,7 +125,7 @@ class ImageUploadController extends Controller
 
     /**
      * Get all images for a specific listing
-     * 
+     *
      * @param int $listingId
      * @return JsonResponse
      */
@@ -141,7 +141,7 @@ class ImageUploadController extends Controller
 
     /**
      * Upload images for social feed posts
-     * 
+     *
      * @param Request $request
      * @return JsonResponse
      */
@@ -160,7 +160,7 @@ class ImageUploadController extends Controller
 
         try {
             $images = $request->file('images');
-            
+
             // Handle single image upload
             if (!is_array($images)) {
                 $images = [$images];
@@ -169,10 +169,10 @@ class ImageUploadController extends Controller
             foreach ($images as $image) {
                 // Generate unique filename
                 $filename = Str::uuid() . '.' . $image->getClientOriginalExtension();
-                
+
                 // Store in storage/app/public/posts
                 $path = $image->storeAs('posts', $filename, 'public');
-                
+
                 // Return full URL for frontend use
                 $uploadedUrls[] = url(Storage::url($path));
             }

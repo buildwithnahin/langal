@@ -139,17 +139,17 @@ Route::prefix('data-operator')->group(function () {
         Route::get('/profile', [DataOperatorAuthController::class, 'profile']);
         Route::post('/update-profile', [DataOperatorAuthController::class, 'updateProfile']);
         Route::post('/logout', [DataOperatorAuthController::class, 'logout']);
-        
+
         // Profile verification routes
         Route::get('/farmers', [DataOperatorAuthController::class, 'getFarmers']);
         Route::get('/customers', [DataOperatorAuthController::class, 'getCustomers']);
         Route::post('/verify-profile', [DataOperatorAuthController::class, 'verifyProfile']);
-        
+
         // Field data collection routes
         Route::get('/field-reports', [DataOperatorAuthController::class, 'getFieldReports']);
         Route::post('/field-reports', [DataOperatorAuthController::class, 'createFieldReport']);
         Route::delete('/field-reports/{reportId}', [DataOperatorAuthController::class, 'deleteFieldReport']);
-        
+
         // Soil test reports routes
         Route::get('/soil-tests', [DataOperatorAuthController::class, 'getSoilTestReports']);
         Route::post('/soil-tests', [DataOperatorAuthController::class, 'createSoilTestReport']);
@@ -216,7 +216,7 @@ Route::prefix('social')->group(function () {
         Route::post('/posts/{id}/report', [PostController::class, 'reportPost']);
         Route::post('/posts/{id}/comments', [PostController::class, 'addComment']);
         Route::post('/posts/{postId}/comments/{commentId}/report', [PostController::class, 'reportComment']);
-        
+
         // Image upload for posts
         Route::post('/upload-images', [ImageUploadController::class, 'uploadPostImages']);
     // });

@@ -60,7 +60,7 @@ class PostController extends Controller
                     $avatarUrl = url('storage/' . $post->author_avatar);
                 }
             }
-            
+
             return [
                 'id' => (string)$post->post_id,
                 'author' => [
@@ -212,7 +212,7 @@ class PostController extends Controller
                     $avatarUrl = url('storage/' . $comment->author_avatar);
                 }
             }
-            
+
             return [
                 'id' => (string)$comment->comment_id,
                 'author' => [
@@ -299,7 +299,7 @@ class PostController extends Controller
     {
         $userId = $request->user_id;
         $reason = $request->report_reason;
-        
+
         if (!$userId) {
             return response()->json(['error' => 'User ID required'], 400);
         }
@@ -316,7 +316,7 @@ class PostController extends Controller
                 ->where('post_id', $id)
                 ->where('user_id', $userId)
                 ->delete();
-            
+
             $reported = false;
         } else {
             // Add report with reason and post type
@@ -329,7 +329,7 @@ class PostController extends Controller
                 'created_at' => now(),
                 'updated_at' => now()
             ]);
-            
+
             $reported = true;
         }
 
@@ -347,7 +347,7 @@ class PostController extends Controller
     {
         $userId = $request->user_id;
         $reason = $request->report_reason;
-        
+
         if (!$userId) {
             return response()->json(['error' => 'User ID required'], 400);
         }
@@ -364,7 +364,7 @@ class PostController extends Controller
                 ->where('comment_id', $commentId)
                 ->where('user_id', $userId)
                 ->delete();
-            
+
             $reported = false;
         } else {
             // Add report with reason
@@ -375,7 +375,7 @@ class PostController extends Controller
                 'created_at' => now(),
                 'updated_at' => now()
             ]);
-            
+
             $reported = true;
         }
 
