@@ -1,6 +1,7 @@
 // Central Marketplace Service - Similar to socialFeedService
 
 import { MarketplaceListing, ListingAuthor, ListingFilter } from "@/types/marketplace";
+import { getAzureImageUrl } from "@/lib/utils";
 
 // Import marketplace images
 import powerTillerImg from "@/assets/marketplace/power tiller.png";
@@ -170,13 +171,16 @@ class MarketplaceService {
             status: asStatus(db.status || 'active'),
             images: Array.isArray(db.images) 
                 ? db.images.map(img => {
-                    // If image is already a full URL, return as-is
+                    // Use getAzureImageUrl to convert any localhost/relative URLs to Azure URLs
+                    const azureUrl = getAzureImageUrl(img);
+                    if (azureUrl) return azureUrl;
+                    
+                    // Fallback: if image is already a full URL, return as-is
                     if (img.startsWith('http://') || img.startsWith('https://') || img.startsWith('/')) {
                         return img;
                     }
-                    // Otherwise, construct the storage URL
-                    const baseUrl = this.API_BASE.replace('/api', '');
-                    return `${baseUrl}/storage/${img}`;
+                    // Otherwise, construct the Azure URL
+                    return `https://langal.blob.core.windows.net/public/${img}`;
                   })
                 : [],
             tags: Array.isArray(db.tags) ? db.tags : [],

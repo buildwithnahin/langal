@@ -15,16 +15,17 @@ export function getAssetPath(path: string) {
 const AZURE_STORAGE_URL = 'https://langal.blob.core.windows.net/public';
 
 /**
- * Convert profile photo URL to proper Azure URL
- * Handles localhost URLs and relative paths
+ * Convert any image URL to proper Azure URL
+ * Handles localhost URLs, Railway backend URLs, and relative paths
+ * Works for profile photos, marketplace images, post images, etc.
  */
-export function getProfilePhotoUrl(photoPath: string | undefined): string | undefined {
-  if (!photoPath) return undefined;
+export function getAzureImageUrl(imagePath: string | undefined | null): string | undefined {
+  if (!imagePath) return undefined;
   
-  // If it's a localhost URL, convert to Azure URL
-  if (photoPath.includes('localhost') || photoPath.includes('127.0.0.1')) {
+  // If it's a localhost or Railway backend URL, convert to Azure URL
+  if (imagePath.includes('localhost') || imagePath.includes('127.0.0.1') || imagePath.includes('railway.app')) {
     try {
-      const url = new URL(photoPath);
+      const url = new URL(imagePath);
       let path = url.pathname;
       // Remove leading /storage/ if present
       path = path.replace(/^\/storage\//, '');
@@ -33,7 +34,7 @@ export function getProfilePhotoUrl(photoPath: string | undefined): string | unde
       return `${AZURE_STORAGE_URL}/${path}`;
     } catch {
       // If URL parsing fails, try simple string replacement
-      const pathMatch = photoPath.match(/\/storage\/(.+)$/);
+      const pathMatch = imagePath.match(/\/storage\/(.+)$/);
       if (pathMatch) {
         return `${AZURE_STORAGE_URL}/${pathMatch[1]}`;
       }
@@ -41,15 +42,18 @@ export function getProfilePhotoUrl(photoPath: string | undefined): string | unde
   }
   
   // If already a full Azure/HTTPS URL, return as is
-  if (photoPath.startsWith('https://')) {
-    return photoPath;
+  if (imagePath.startsWith('https://')) {
+    return imagePath;
   }
   
-  // If it's just a path (e.g., profile_photos/xxx.jpg), prepend Azure URL
-  if (!photoPath.startsWith('http')) {
-    return `${AZURE_STORAGE_URL}/${photoPath.replace(/^\//, '')}`;
+  // If it's just a path (e.g., profile_photos/xxx.jpg or marketplace/xxx.jpg), prepend Azure URL
+  if (!imagePath.startsWith('http')) {
+    return `${AZURE_STORAGE_URL}/${imagePath.replace(/^\//, '')}`;
   }
   
   // Return as-is for other cases
-  return photoPath;
+  return imagePath;
 }
+
+// Alias for backward compatibility
+export const getProfilePhotoUrl = getAzureImageUrl;

@@ -23,7 +23,7 @@ import {
     ChevronDown,
     ChevronUp
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, getAzureImageUrl } from "@/lib/utils";
 import { SocialPost, PostComment, POST_REPORT_REASONS, COMMENT_REPORT_REASONS } from "@/types/social";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -309,7 +309,7 @@ export const EnhancedPostCard = ({
                 <div className="flex items-start justify-between">
                     <div className="flex items-center space-x-3">
                         <Avatar className="h-10 w-10">
-                            <AvatarImage src={postAuthor.avatar} />
+                            <AvatarImage src={getAzureImageUrl(postAuthor.avatar)} />
                             <AvatarFallback>
                                 {postAuthor.name?.charAt(0) || 'U'}
                             </AvatarFallback>
@@ -540,7 +540,7 @@ export const EnhancedPostCard = ({
                                 )}
                             >
                                 <img
-                                    src={image}
+                                    src={getAzureImageUrl(image) || image}
                                     alt=""
                                     className="w-full h-full object-cover hover:scale-105 transition-transform cursor-pointer"
                                     onError={(e) => {

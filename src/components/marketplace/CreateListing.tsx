@@ -13,6 +13,7 @@ import { LISTING_CATEGORIES, LISTING_TYPES } from "@/types/marketplace";
 import { useAuth } from "@/contexts/AuthContext";
 import { API_URL } from '@/services/api';
 import LocationSelector from "@/components/farmer/LocationSelector";
+import { getAzureImageUrl } from "@/lib/utils";
 
 interface CreateListingProps {
     onListing: (listingData: any) => void;
@@ -227,7 +228,7 @@ export const CreateListing = ({ onListing, onCancel }: CreateListingProps) => {
                 {/* Author Info */}
                 <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
                     <Avatar className="h-10 w-10">
-                        <AvatarImage src={userProfile?.profile_photo_url_full || user?.profilePhoto || "/placeholder.svg"} />
+                        <AvatarImage src={getAzureImageUrl(userProfile?.profile_photo_url_full || user?.profilePhoto) || "/placeholder.svg"} />
                         <AvatarFallback>{userProfile?.full_name?.[0] || user?.name?.[0] || "U"}</AvatarFallback>
                     </Avatar>
                     <div className="flex-1">

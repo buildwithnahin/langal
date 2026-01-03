@@ -25,7 +25,7 @@ import {
     BarChart3,
     Flag
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, getAzureImageUrl } from "@/lib/utils";
 import { SocialPost } from "@/types/social";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -435,7 +435,7 @@ export const PersonalPostManager = ({ onClose }: PersonalPostManagerProps) => {
                                                 {post.images.slice(0, 3).map((image, index) => (
                                                     <div key={index} className="relative aspect-square">
                                                         <img
-                                                            src={image}
+                                                            src={getAzureImageUrl(image) || image}
                                                             alt=""
                                                             className="w-full h-full object-cover rounded-lg"
                                                             onError={(e) => {

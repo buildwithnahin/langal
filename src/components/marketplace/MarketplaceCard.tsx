@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { TTSButton } from "@/components/ui/tts-button";
 import { MapPin, Heart, MessageCircle, Star, Clock } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, getAzureImageUrl } from "@/lib/utils";
 import { englishToBangla } from "@/lib/banglaUtils";
 
 // Helper function to get Bengali relative time
@@ -145,9 +145,16 @@ export const MarketplaceCard = ({ item, onContact, onSave }: MarketplaceCardProp
         <div className="aspect-video bg-muted rounded-lg mb-3 overflow-hidden">
           {item.images.length > 0 ? (
             <img
-              src={item.images[0]}
+              src={getAzureImageUrl(item.images[0]) || item.images[0]}
               alt={item.title}
               className="w-full h-full object-cover"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.style.display = 'none';
+                if (target.parentElement) {
+                  target.parentElement.innerHTML = '<div class="flex items-center justify-center h-full text-muted-foreground"><span class="text-2xl">🏷️</span></div>';
+                }
+              }}
             />
           ) : (
             <div className="flex items-center justify-center h-full text-muted-foreground">
@@ -173,7 +180,7 @@ export const MarketplaceCard = ({ item, onContact, onSave }: MarketplaceCardProp
         <div className="flex items-center justify-between text-xs">
           <div className="flex items-center gap-2">
             <Avatar className="h-5 w-5">
-              <AvatarImage src={item.seller.avatar} />
+              <AvatarImage src={getAzureImageUrl(item.seller.avatar)} />
               <AvatarFallback className="text-xs">{item.seller.name?.[0]}</AvatarFallback>
             </Avatar>
             <span className="font-medium">{item.seller.name}</span>
