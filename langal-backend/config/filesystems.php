@@ -65,7 +65,7 @@ return [
             'name'      => env('AZURE_STORAGE_NAME'),
             'key'       => env('AZURE_STORAGE_KEY'),
             'container' => env('AZURE_STORAGE_CONTAINER'),
-            'url'       => env('AZURE_STORAGE_URL'),
+            'url'       => env('AZURE_STORAGE_URL') ?: (env('AZURE_STORAGE_NAME') ? sprintf('https://%s.blob.core.windows.net/%s', env('AZURE_STORAGE_NAME'), env('AZURE_STORAGE_CONTAINER')) : null),
             'endpoint'  => env('AZURE_STORAGE_ENDPOINT'),
             'connection_string' => env('AZURE_STORAGE_CONNECTION_STRING'),
         ],

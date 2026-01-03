@@ -53,7 +53,11 @@ class UserProfile extends Model
             if (filter_var($this->profile_photo_url, FILTER_VALIDATE_URL)) {
                 return $this->profile_photo_url;
             }
-            return \Illuminate\Support\Facades\Storage::url($this->profile_photo_url);
+            try {
+                return \Illuminate\Support\Facades\Storage::url($this->profile_photo_url);
+            } catch (\Exception $e) {
+                return null;
+            }
         }
         return null;
     }
@@ -67,7 +71,11 @@ class UserProfile extends Model
             if (filter_var($this->nid_photo_url, FILTER_VALIDATE_URL)) {
                 return $this->nid_photo_url;
             }
-            return \Illuminate\Support\Facades\Storage::url($this->nid_photo_url);
+            try {
+                return \Illuminate\Support\Facades\Storage::url($this->nid_photo_url);
+            } catch (\Exception $e) {
+                return null;
+            }
         }
         return null;
     }
