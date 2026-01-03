@@ -32,6 +32,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Header } from "@/components/layout/Header";
 import api from "@/services/api";
 import LocationSelector from "@/components/farmer/LocationSelector";
+import { getProfilePhotoUrl } from "@/lib/utils";
 
 interface LocationData {
     division: string;
@@ -428,7 +429,7 @@ const CustomerProfile = () => {
                             <CardHeader className="text-center">
                                 <div className="relative mx-auto">
                                     <Avatar className="w-24 h-24 mx-auto">
-                                        <AvatarImage src={photoPreview || profileData.profilePhotoUrl || ''} />
+                                        <AvatarImage src={photoPreview || getProfilePhotoUrl(profileData.profilePhotoUrl) || ''} />
                                         <AvatarFallback className="text-2xl bg-purple-100 text-purple-600">
                                             {profileData.fullName?.charAt(0) || 'C'}
                                         </AvatarFallback>
