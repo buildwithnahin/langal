@@ -82,15 +82,15 @@ type DbListing = {
     is_saved?: boolean;
 };
 
+import { API_URL } from './api';
+
 class MarketplaceService {
     private listings: MarketplaceListing[] = [];
     private initialized = false;
     private API_BASE: string;
 
     constructor() {
-        const env = (import.meta as unknown as { env?: Record<string, string | undefined> })?.env || {};
-        const fromEnv = env.VITE_API_BASE;
-        this.API_BASE = (fromEnv ? fromEnv.replace(/\/$/, '') : '') || 'http://localhost:8000/api';
+        this.API_BASE = API_URL;
     }
 
     private async fetchJSON<T>(path: string, options?: RequestInit): Promise<T | null> {

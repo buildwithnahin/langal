@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Resolve base API from Vite env with sensible default
-const API_URL = (
+export const API_URL = (
     (import.meta as unknown as { env?: Record<string, string | undefined> })?.env?.VITE_API_URL
     || (import.meta as unknown as { env?: Record<string, string | undefined> })?.env?.VITE_API_BASE
     || 'http://127.0.0.1:8000/api'

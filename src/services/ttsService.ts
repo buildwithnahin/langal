@@ -82,7 +82,7 @@ class BanglaTTSService {
         this.updateStatus({ isLoading: true, isPlaying: false, progress: 10 });
 
         // Get backend API URL from environment
-        const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+        const backendUrl = (import.meta.env.VITE_API_URL || 'http://localhost:8000').replace(/\/api\/?$/, '');
         const apiEndpoint = `${backendUrl}/api/tts/generate`;
 
         console.info('🎙️ Calling Hugging Face TTS via backend proxy...');
