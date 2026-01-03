@@ -25,20 +25,9 @@ import {
     Loader2
 } from "lucide-react";
 import { API_URL } from "@/services/api";
+import { getProfilePhotoUrl } from "@/lib/utils";
 
 const API_BASE = API_URL;
-
-// Helper to get full image URL
-const getImageUrl = (imagePath: string | undefined): string => {
-    if (!imagePath) return '';
-    // If already a full URL, return as is
-    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
-        return imagePath;
-    }
-    // Otherwise, prepend base URL
-    const baseUrl = API_BASE.replace(/\/?api\/?$/, '');
-    return `${baseUrl}${imagePath.startsWith('/') ? '' : '/'}${imagePath}`;
-};
 
 const ExpertProfile = () => {
     const { setAuthUser } = useAuth();
@@ -284,11 +273,11 @@ const ExpertProfile = () => {
                                 <div className="h-20 w-20 rounded-full overflow-hidden bg-green-700 flex items-center justify-center relative group">
                                     {profileData.profilePhoto && !imageError ? (
                                         <img
-                                            src={getImageUrl(profileData.profilePhoto)}
+                                            src={getProfilePhotoUrl(profileData.profilePhoto) || ''}
                                             alt={profileData.name}
                                             className="h-full w-full object-cover"
                                             onError={(e) => {
-                                                console.error('✗ Profile photo failed:', getImageUrl(profileData.profilePhoto));
+                                                console.error('✗ Profile photo failed:', getProfilePhotoUrl(profileData.profilePhoto));
                                                 setImageError(true);
                                             }}
                                         />
