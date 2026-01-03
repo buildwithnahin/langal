@@ -73,6 +73,18 @@ class MarketplaceListing extends Model
             try {
                 return \Illuminate\Support\Facades\Storage::url($image);
             } catch (\Exception $e) {
+                // Fallback: Manually construct the Azure URL
+                $accountName = config('filesystems.disks.azure.name');
+                $container = config('filesystems.disks.azure.container');
+                
+                if ($accountName && $container) {
+                    return sprintf(
+                        'https://%s.blob.core.windows.net/%s/%s',
+                        $accountName,
+                        $container,
+                        ltrim($image, '/')
+                    );
+                }
                 return null;
             }
         }, $this->images);

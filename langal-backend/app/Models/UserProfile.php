@@ -50,16 +50,36 @@ class UserProfile extends Model
     public function getProfilePhotoUrlFullAttribute(): ?string
     {
         if ($this->profile_photo_url) {
+            // If it's already a full URL, return it
             if (filter_var($this->profile_photo_url, FILTER_VALIDATE_URL)) {
                 return $this->profile_photo_url;
             }
+
             try {
+                // Try to use the Storage facade
                 return \Illuminate\Support\Facades\Storage::url($this->profile_photo_url);
             } catch (\Exception $e) {
+                // Fallback: Manually construct the Azure URL if Storage::url fails
+                $accountName = config('filesystems.disks.azure.name');
+                $container = config('filesystems.disks.azure.container');
+                
+                if ($accountName && $container) {
+                    return sprintf(
+                        'https://%s.blob.core.windows.net/%s/%s',
+                        $accountName,
+                        $container,
+                        ltrim($this->profile_photo_url, '/')
+                    );
+                }
+                
+                // Log the error for debugging
+                \Illuminate\Support\Facades\Log::error('Profile Photo URL Generation Error: ' . $e->getMessage());
                 return null;
             }
         }
-        return null;
+        
+        // Return default avatar if no photo
+        return 'https://ui-avatars.com/api/?name=' . urlencode($this->full_name ?? 'User') . '&color=7F9CF5&background=EBF4FF';
     }
 
     /**
