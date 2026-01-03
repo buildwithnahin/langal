@@ -255,16 +255,16 @@ class ExpertAuthController extends Controller
         try {
             DB::beginTransaction();
 
-            // Handle file uploads
+            // Handle file uploads (Azure storage)
             $profilePhotoPath = null;
             $certificationPhotoPath = null;
 
             if ($request->hasFile('profilePhoto')) {
-                $profilePhotoPath = $request->file('profilePhoto')->store('expert/profiles', 'public');
+                $profilePhotoPath = $request->file('profilePhoto')->store('expert/profiles', 'azure');
             }
 
             if ($request->hasFile('certificationPhoto')) {
-                $certificationPhotoPath = $request->file('certificationPhoto')->store('expert/certifications', 'public');
+                $certificationPhotoPath = $request->file('certificationPhoto')->store('expert/certifications', 'azure');
             }
 
             // Create user account
@@ -525,11 +525,15 @@ class ExpertAuthController extends Controller
             $userProfile = $user->profile;
             if ($userProfile) {
                 if ($request->hasFile('profilePhoto')) {
-                    // Delete old photo if exists
+                    // Delete old photo if exists (try Azure first, then local)
                     if ($userProfile->profile_photo_url) {
-                        \Illuminate\Support\Facades\Storage::disk('public')->delete($userProfile->profile_photo_url);
+                        try {
+                            \Illuminate\Support\Facades\Storage::disk('azure')->delete($userProfile->profile_photo_url);
+                        } catch (\Exception $e) {
+                            \Illuminate\Support\Facades\Storage::disk('public')->delete($userProfile->profile_photo_url);
+                        }
                     }
-                    $path = $request->file('profilePhoto')->store('expert/profiles', 'public');
+                    $path = $request->file('profilePhoto')->store('expert/profiles', 'azure');
                     $userProfile->profile_photo_url = $path;
                 }
 

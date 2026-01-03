@@ -349,18 +349,18 @@ class CustomerAuthController extends Controller
                 'is_active' => true,
             ]);
 
-            // Handle Profile Photo Upload
+            // Handle Profile Photo Upload (Azure storage)
             $profilePhotoPath = null;
             if ($request->hasFile('profilePhoto')) {
-                $profilePhotoPath = $request->file('profilePhoto')->store('profile_photos/customers', 'public');
-                Log::info('Customer profile photo uploaded', ['path' => $profilePhotoPath]);
+                $profilePhotoPath = $request->file('profilePhoto')->store('profile_photos/customers', 'azure');
+                Log::info('Customer profile photo uploaded to Azure', ['path' => $profilePhotoPath]);
             }
 
-            // Handle NID Photo Upload
+            // Handle NID Photo Upload (Azure storage)
             $nidPhotoPath = null;
             if ($request->hasFile('nidPhoto')) {
-                $nidPhotoPath = $request->file('nidPhoto')->store('nid_photos/customers', 'public');
-                Log::info('Customer NID photo uploaded', ['path' => $nidPhotoPath]);
+                $nidPhotoPath = $request->file('nidPhoto')->store('nid_photos/customers', 'azure');
+                Log::info('Customer NID photo uploaded to Azure', ['path' => $nidPhotoPath]);
             }
 
             // Get location details and format address
@@ -554,13 +554,17 @@ class CustomerAuthController extends Controller
             $profile = $user->profile;
             $business = $user->customerBusiness;
 
-            // Update profile photo if provided
+            // Update profile photo if provided (Azure storage)
             if ($request->hasFile('profilePhoto')) {
-                // Delete old photo
+                // Delete old photo from Azure or local
                 if ($profile && $profile->profile_photo_url) {
-                    Storage::disk('public')->delete($profile->profile_photo_url);
+                    try {
+                        Storage::disk('azure')->delete($profile->profile_photo_url);
+                    } catch (\Exception $e) {
+                        Storage::disk('public')->delete($profile->profile_photo_url);
+                    }
                 }
-                $profilePhotoPath = $request->file('profilePhoto')->store('profile_photos/customers', 'public');
+                $profilePhotoPath = $request->file('profilePhoto')->store('profile_photos/customers', 'azure');
                 $profile->profile_photo_url = $profilePhotoPath;
             }
 

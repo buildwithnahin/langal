@@ -39,11 +39,18 @@ class DocumentUploadController extends Controller
             // Generate unique filename
             $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
 
-            // Store in public disk (Azure or local based on config)
-            $path = $file->storeAs($folder, $filename, 'public');
+            // Store in Azure Blob Storage
+            $path = $file->storeAs($folder, $filename, 'azure');
 
-            // Get URL
-            $url = Storage::disk('public')->url($path);
+            // Build Azure URL
+            $accountName = config('filesystems.disks.azure.name');
+            $container = config('filesystems.disks.azure.container');
+            $url = sprintf(
+                'https://%s.blob.core.windows.net/%s/%s',
+                $accountName,
+                $container,
+                $path
+            );
 
             return response()->json([
                 'success' => true,

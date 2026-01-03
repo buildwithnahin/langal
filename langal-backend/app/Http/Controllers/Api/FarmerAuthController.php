@@ -229,8 +229,8 @@ class FarmerAuthController extends Controller
             ]);
 
             if ($request->hasFile('profilePhoto')) {
-                $profilePhotoPath = $request->file('profilePhoto')->store('profile_photos', 'public');
-                \Log::info('Profile photo uploaded', ['path' => $profilePhotoPath]);
+                $profilePhotoPath = $request->file('profilePhoto')->store('profile_photos', 'azure');
+                \Log::info('Profile photo uploaded to Azure', ['path' => $profilePhotoPath]);
             } else {
                 \Log::warning('No profile photo in request');
             }
@@ -423,8 +423,8 @@ class FarmerAuthController extends Controller
                         }
                     }
 
-                    // Store new photo
-                    $path = $file->store('profile_photos', 'public');
+                    // Store new photo in Azure
+                    $path = $file->store('profile_photos', 'azure');
                     $profileData['profile_photo_url'] = $path;
                 }
 

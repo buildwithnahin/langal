@@ -130,10 +130,10 @@ class DataOperatorAuthController extends Controller
                 'is_active' => true,
             ]);
 
-            // Handle Profile Photo Upload
+            // Handle Profile Photo Upload (Azure storage)
             $profilePhotoPath = null;
             if ($request->hasFile('profilePhoto')) {
-                $profilePhotoPath = $request->file('profilePhoto')->store('profile_photos', 'public');
+                $profilePhotoPath = $request->file('profilePhoto')->store('profile_photos', 'azure');
             }
 
             // Get location details from postal_code
@@ -412,12 +412,16 @@ class DataOperatorAuthController extends Controller
 
                 // Handle profile photo upload
                 if ($request->hasFile('profile_photo')) {
-                    // Delete old photo if exists
+                    // Delete old photo if exists (try Azure first, then local)
                     if ($profile->profile_photo_url) {
-                        Storage::disk('public')->delete($profile->profile_photo_url);
+                        try {
+                            Storage::disk('azure')->delete($profile->profile_photo_url);
+                        } catch (\Exception $e) {
+                            Storage::disk('public')->delete($profile->profile_photo_url);
+                        }
                     }
 
-                    $profilePhotoPath = $request->file('profile_photo')->store('profile_photos', 'public');
+                    $profilePhotoPath = $request->file('profile_photo')->store('profile_photos', 'azure');
                     $profile->profile_photo_url = $profilePhotoPath;
                 }
 
