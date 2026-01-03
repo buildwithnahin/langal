@@ -9,9 +9,19 @@ import { englishToBangla } from "@/lib/banglaUtils";
 
 // Helper function to get Bengali relative time
 const getBanglaRelativeTime = (dateString: string): string => {
+  if (!dateString) return "সম্প্রতি";
+  
   const date = new Date(dateString);
+  
+  // Check if date is valid
+  if (isNaN(date.getTime())) return "সম্প্রতি";
+  
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
+  
+  // If date is in the future or very recent
+  if (diffMs < 0) return "এইমাত্র";
+  
   const diffSecs = Math.floor(diffMs / 1000);
   const diffMins = Math.floor(diffSecs / 60);
   const diffHours = Math.floor(diffMins / 60);
@@ -26,16 +36,14 @@ const getBanglaRelativeTime = (dateString: string): string => {
   yesterday.setDate(yesterday.getDate() - 1);
   const isYesterday = date.toDateString() === yesterday.toDateString();
 
-  if (isToday) {
-    if (diffMins < 1) return "এইমাত্র";
-    if (diffMins < 60) return `${englishToBangla(diffMins)} মিনিট আগে`;
-    return `${englishToBangla(diffHours)} ঘণ্টা আগে`;
-  }
+  if (diffSecs < 60) return "এইমাত্র";
+  if (diffMins < 60) return `${englishToBangla(diffMins)} মিনিট আগে`;
+  if (isToday) return `${englishToBangla(diffHours)} ঘণ্টা আগে`;
   if (isYesterday) return "গতকাল";
   if (diffDays < 7) return `${englishToBangla(diffDays)} দিন আগে`;
-  if (diffWeeks < 4) return `${englishToBangla(diffWeeks)} সপ্তাহ আগে`;
-  if (diffMonths < 12) return `${englishToBangla(diffMonths)} মাস আগে`;
-  return `${englishToBangla(diffYears)} বছর আগে`;
+  if (diffDays < 30) return `${englishToBangla(diffWeeks)} সপ্তাহ আগে`;
+  if (diffMonths < 12) return `${englishToBangla(diffMonths || 1)} মাস আগে`;
+  return `${englishToBangla(diffYears || 1)} বছর আগে`;
 };
 
 export interface MarketplaceItem {
