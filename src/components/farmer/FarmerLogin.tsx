@@ -283,8 +283,37 @@ const FarmerLogin = ({ onBackToMainLogin }: FarmerLoginProps) => {
         }
     };
 
+    // Demo login handler - auto-fill phone number
+    const handleDemoLogin = () => {
+        setPhone("01997900840");
+        toast({
+            title: "ডেমো নম্বর সেট হয়েছে",
+            description: "এখন 'OTP পাঠান' বাটনে ক্লিক করুন",
+        });
+    };
+
     const renderPhoneForm = () => (
         <div className="space-y-6">
+            {/* Demo Login Banner */}
+            <Alert className="border-amber-300 bg-amber-50">
+                <AlertDescription className="text-amber-800">
+                    <div className="text-center">
+                        <span className="font-bold text-amber-700">🎯 ডেমো অ্যাক্সেস</span>
+                        <br />
+                        <span className="text-sm">ডেমো দেখতে নিচের নম্বর ব্যবহার করুন:</span>
+                        <br />
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={handleDemoLogin}
+                            className="mt-2 bg-amber-100 hover:bg-amber-200 border-amber-400 text-amber-800 font-bold"
+                        >
+                            📱 01997900840
+                        </Button>
+                    </div>
+                </AlertDescription>
+            </Alert>
+
             <Alert className="border-green-200 bg-green-50">
                 <Phone className="h-4 w-4 text-green-600" />
                 <AlertDescription className="text-green-800">
