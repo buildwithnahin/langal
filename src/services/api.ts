@@ -15,6 +15,8 @@ const api = axios.create({
     headers: {
         'Accept': 'application/json',
     },
+    withCredentials: true, // Important for Sanctum CSRF cookie
+    withXSRFToken: true, // Important for Laravel 11+ / Sanctum
 });
 
 // Add a request interceptor to attach the token and set Content-Type
