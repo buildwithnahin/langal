@@ -133,29 +133,29 @@ class SocialFeedReportController extends Controller
         try {
             $postReportsTotal = DB::table('post_reports')->count();
             $commentReportsTotal = DB::table('comment_reports')->count();
-            
+
             $postReportsPending = DB::table('post_reports')
                 ->where('status', 'pending')
                 ->orWhereNull('status')
                 ->count();
-            
+
             $commentReportsPending = DB::table('comment_reports')
                 ->where('status', 'pending')
                 ->orWhereNull('status')
                 ->count();
-            
+
             $postReportsAccepted = DB::table('post_reports')
                 ->where('status', 'accepted')
                 ->count();
-            
+
             $commentReportsAccepted = DB::table('comment_reports')
                 ->where('status', 'accepted')
                 ->count();
-            
+
             $postReportsDeclined = DB::table('post_reports')
                 ->where('status', 'declined')
                 ->count();
-            
+
             $commentReportsDeclined = DB::table('comment_reports')
                 ->where('status', 'declined')
                 ->count();
@@ -186,7 +186,7 @@ class SocialFeedReportController extends Controller
         try {
             $deleteContent = $request->input('deleteContent', true);
             $adminNote = $request->input('adminNote', '');
-            
+
             // Parse report ID to determine type
             $parts = explode('_', $reportId);
             $type = $parts[0]; // 'post' or 'comment'
@@ -245,7 +245,7 @@ class SocialFeedReportController extends Controller
     {
         try {
             $adminNote = $request->input('adminNote', '');
-            
+
             // Parse report ID to determine type
             $parts = explode('_', $reportId);
             $type = $parts[0]; // 'post' or 'comment'
