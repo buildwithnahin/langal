@@ -28,6 +28,14 @@ const clearOldSession = () => {
     sessionStorage.clear();
 };
 
+// Clear old session data
+const clearOldSession = () => {
+    console.log('Clearing old session data...');
+    localStorage.removeItem('user');
+    localStorage.removeItem('auth_token');
+    sessionStorage.clear();
+};
+
 const FarmerLogin = ({ onBackToMainLogin }: FarmerLoginProps) => {
     const [currentStep, setCurrentStep] = useState<LoginStep>('phone');
     const [phone, setPhone] = useState("");
