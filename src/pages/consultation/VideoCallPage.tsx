@@ -82,7 +82,8 @@ const VideoCallPage = () => {
     }
 
     return () => {
-      cleanup();
+      // Cleanup on unmount - async cleanup but we don't await in useEffect cleanup
+      cleanup().catch(err => console.error('[Agora] Cleanup error on unmount:', err));
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appointmentId]);
@@ -387,41 +388,80 @@ const VideoCallPage = () => {
 
   const handleEndCall = async () => {
     try {
+      // First cleanup Agora resources
+      await cleanup();
+
+      // Then notify server
       if (callData?.call_id) {
         await endCall(callData.call_id);
       }
     } catch (err) {
       console.error("Error ending call:", err);
     } finally {
-      cleanup();
       navigate(-1);
     }
   };
 
-  const cleanup = () => {
+  const cleanup = async () => {
+    console.log('[Agora] Starting cleanup...');
+
     // Stop duration counter
     if (durationIntervalRef.current) {
       clearInterval(durationIntervalRef.current);
+      durationIntervalRef.current = null;
     }
 
-    // Close local tracks
-    if (localTracksRef.current.audioTrack) {
-      localTracksRef.current.audioTrack.close();
-    }
-    if (localTracksRef.current.videoTrack) {
-      localTracksRef.current.videoTrack.close();
+    try {
+      // Unpublish and close local tracks
+      if (clientRef.current) {
+        const tracksToUnpublish = [];
+
+        if (localTracksRef.current.audioTrack) {
+          tracksToUnpublish.push(localTracksRef.current.audioTrack);
+        }
+        if (localTracksRef.current.videoTrack) {
+          tracksToUnpublish.push(localTracksRef.current.videoTrack);
+        }
+
+        // Unpublish tracks if connected
+        if (tracksToUnpublish.length > 0 && connected) {
+          try {
+            await clientRef.current.unpublish(tracksToUnpublish);
+            console.log('[Agora] Tracks unpublished');
+          } catch (err) {
+            console.warn('[Agora] Error unpublishing tracks:', err);
+          }
+        }
+      }
+
+      // Close local tracks
+      if (localTracksRef.current.audioTrack) {
+        localTracksRef.current.audioTrack.close();
+        localTracksRef.current.audioTrack = null;
+        console.log('[Agora] Audio track closed');
+      }
+      if (localTracksRef.current.videoTrack) {
+        localTracksRef.current.videoTrack.close();
+        localTracksRef.current.videoTrack = null;
+        console.log('[Agora] Video track closed');
+      }
+
+      // Leave channel
+      if (clientRef.current) {
+        await clientRef.current.leave();
+        console.log('[Agora] Left channel');
+      }
+    } catch (err) {
+      console.error('[Agora] Error during cleanup:', err);
     }
 
-    // Leave channel
-    if (clientRef.current) {
-      clientRef.current.leave();
-    }
-
-    // Reset remote user state
+    // Reset state
     remoteUsersRef.current.clear();
     setRemoteUserJoined(false);
     setRemoteVideoEnabled(false);
     setConnected(false);
+
+    console.log('[Agora] Cleanup complete');
   };
 
   const toggleMute = () => {
@@ -557,7 +597,7 @@ const VideoCallPage = () => {
           ref={remoteVideoRef}
           className="absolute inset-0 bg-gray-800"
         />
-        
+
         {/* Placeholder overlay - separate from video container to avoid DOM conflicts */}
         {(!connected || !remoteVideoEnabled) && (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-800 z-5">
@@ -594,7 +634,7 @@ const VideoCallPage = () => {
           ref={localVideoRef}
           className="absolute top-4 right-4 w-32 h-44 bg-gray-700 rounded-xl overflow-hidden shadow-lg z-10"
         />
-        
+
         {/* Local video off overlay - separate from video container */}
         {isVideoOff && (
           <div className="absolute top-4 right-4 w-32 h-44 flex items-center justify-center bg-gray-800 rounded-xl z-10">
