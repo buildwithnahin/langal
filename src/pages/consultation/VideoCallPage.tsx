@@ -329,17 +329,16 @@ const VideoCallPage = () => {
       // Create local tracks - always create both audio and video
       // This allows users to toggle video on/off during the call
       const isVideoCall = appointment?.consultation_type === "video";
+      console.log('[Agora] Call type:', appointment?.consultation_type, 'isVideoCall:', isVideoCall);
 
       try {
         localTracksRef.current.videoTrack = await window.AgoraRTC.createCameraVideoTrack();
+        console.log('[Agora] Camera video track created successfully');
         if (localVideoRef.current) {
           localTracksRef.current.videoTrack.play(localVideoRef.current);
         }
-        // If it's an audio call, start with video disabled
-        if (!isVideoCall) {
-          localTracksRef.current.videoTrack.setEnabled(false);
-          setIsVideoOff(true);
-        }
+        // If it's an audio call, start with video disabled but don't disable the track yet
+        // We'll handle this after publishing
       } catch (videoErr) {
         console.warn("Could not access camera:", videoErr);
         localTracksRef.current.videoTrack = null;
@@ -347,19 +346,30 @@ const VideoCallPage = () => {
       }
 
       localTracksRef.current.audioTrack = await window.AgoraRTC.createMicrophoneAudioTrack();
+      console.log('[Agora] Microphone audio track created successfully');
 
-      // Publish tracks - only publish enabled tracks
-      // For audio calls, only publish audio track initially
-      // Video track can be published later when user enables it
+      // Publish tracks - always publish both audio and video if video track exists
+      // For video calls: both tracks enabled
+      // For audio calls: video track will be disabled after publishing
       const tracksToPublish = [];
       tracksToPublish.push(localTracksRef.current.audioTrack);
 
-      // Only publish video track if it's a video call and track exists
-      if (isVideoCall && localTracksRef.current.videoTrack) {
+      // Always publish video track if it exists (even for audio calls)
+      // This allows user to toggle video on during the call
+      if (localTracksRef.current.videoTrack) {
         tracksToPublish.push(localTracksRef.current.videoTrack);
       }
 
+      console.log('[Agora] Publishing tracks:', tracksToPublish.length);
       await clientRef.current.publish(tracksToPublish);
+      console.log('[Agora] Tracks published successfully');
+
+      // Now disable video if it's an audio call (after publishing)
+      if (!isVideoCall && localTracksRef.current.videoTrack) {
+        localTracksRef.current.videoTrack.setEnabled(false);
+        setIsVideoOff(true);
+        console.log('[Agora] Video disabled for audio call');
+      }
 
       setConnected(true);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -424,25 +434,41 @@ const VideoCallPage = () => {
   const toggleVideo = async () => {
     if (localTracksRef.current.videoTrack) {
       if (isVideoOff) {
-        // Enabling video - need to publish if not already published
-        localTracksRef.current.videoTrack.setEnabled(true);
-        // Check if track is not published yet (for audio calls that started without video)
+        // Enabling video - need to enable first, then publish if not already published
         try {
-          // Try to publish the video track if it wasn't published initially
-          if (clientRef.current && !localTracksRef.current.videoTrack._published) {
-            await clientRef.current.publish([localTracksRef.current.videoTrack]);
+          // First enable the track
+          await localTracksRef.current.videoTrack.setEnabled(true);
+
+          // Then try to publish if not already published
+          if (clientRef.current) {
+            // Check if video track is already published by checking client's localTracks
+            const publishedTracks = clientRef.current.localTracks || [];
+            const isPublished = publishedTracks.includes(localTracksRef.current.videoTrack);
+
+            if (!isPublished) {
+              console.log('[Agora] Publishing video track...');
+              await clientRef.current.publish([localTracksRef.current.videoTrack]);
+              console.log('[Agora] Video track published successfully');
+            }
           }
+
+          if (localVideoRef.current) {
+            localTracksRef.current.videoTrack.play(localVideoRef.current);
+          }
+          setIsVideoOff(false);
         } catch (err) {
-          console.warn("Video track already published or error:", err);
-        }
-        if (localVideoRef.current) {
-          localTracksRef.current.videoTrack.play(localVideoRef.current);
+          console.error("Error enabling video:", err);
+          toast({
+            title: "ত্রুটি",
+            description: "ভিডিও চালু করতে সমস্যা হয়েছে",
+            variant: "destructive",
+          });
         }
       } else {
         // Disabling video
         localTracksRef.current.videoTrack.setEnabled(false);
+        setIsVideoOff(true);
       }
-      setIsVideoOff(!isVideoOff);
     }
   };
 
