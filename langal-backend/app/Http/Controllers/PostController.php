@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use App\Services\DataOperatorNotificationService;
 
 class PostController extends Controller
 {
@@ -455,6 +456,25 @@ class PostController extends Controller
                 'updated_at' => now()
             ]);
 
+            // Get post details for notification
+            $post = DB::table('posts')->where('post_id', $id)->first();
+            $reporter = DB::table('users')
+                ->join('user_profiles', 'users.user_id', '=', 'user_profiles.user_id')
+                ->where('users.user_id', $userId)
+                ->select('user_profiles.full_name', 'users.user_type')
+                ->first();
+
+            // Notify data operators about the report
+            $notificationService = new DataOperatorNotificationService();
+            $postContent = $post ? substr($post->content, 0, 50) : 'Post';
+            $notificationService->notifyPostReport(
+                $id,
+                $userId,
+                $reason,
+                $postContent,
+                $reporter ? $reporter->full_name : 'Unknown User'
+            );
+
             $reported = true;
         }
 
@@ -500,6 +520,25 @@ class PostController extends Controller
                 'created_at' => now(),
                 'updated_at' => now()
             ]);
+
+            // Get comment content for notification
+            $comment = DB::table('comments')->where('comment_id', $commentId)->first();
+            $reporter = DB::table('users')
+                ->join('user_profiles', 'users.user_id', '=', 'user_profiles.user_id')
+                ->where('users.user_id', $userId)
+                ->select('user_profiles.full_name', 'users.user_type')
+                ->first();
+
+            // Notify data operators about the report
+            $notificationService = new DataOperatorNotificationService();
+            $notificationService->notifyCommentReport(
+                $commentId,
+                $postId,
+                $userId,
+                $reason,
+                $comment ? substr($comment->comment_text, 0, 50) : 'Comment',
+                $reporter ? $reporter->full_name : 'Unknown User'
+            );
 
             $reported = true;
         }

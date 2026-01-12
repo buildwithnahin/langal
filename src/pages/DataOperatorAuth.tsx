@@ -41,7 +41,7 @@ const DataOperatorAuth = () => {
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                onClick={() => navigate("/")}
+                                onClick={() => navigate("/login")}
                                 className="text-white hover:bg-orange-700"
                             >
                                 <ArrowLeft className="h-5 w-5" />

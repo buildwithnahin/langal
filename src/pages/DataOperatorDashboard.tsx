@@ -13,13 +13,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { 
-    UserCheck, 
-    CloudSun, 
-    BarChart3, 
-    Shield, 
-    Bell, 
-    User, 
+import {
+    UserCheck,
+    CloudSun,
+    BarChart3,
+    Shield,
+    Bell,
+    User,
     LogOut,
     TrendingUp,
     AlertCircle,
@@ -35,11 +35,6 @@ const DataOperatorDashboardNew = () => {
     const navigate = useNavigate();
     const { user, logout, isLoading } = useAuth();
     const [showProfile, setShowProfile] = useState(false);
-    const [notifications] = useState([
-        { id: 1, message: "৫টি নতুন প্রোফাইল যাচাইয়ের অপেক্ষায়", time: "৫ মিনিট আগে", unread: true },
-        { id: 2, message: "২টি ফসল যাচাই সম্পন্ন হয়েছে", time: "১ ঘণ্টা আগে", unread: true },
-        { id: 3, message: "৩টি নতুন সোশ্যাল ফিড রিপোর্ট", time: "২ ঘণ্টা আগে", unread: false },
-    ]);
 
     // Check user type only (ProtectedRoute handles authentication)
     useEffect(() => {
@@ -155,8 +150,6 @@ const DataOperatorDashboardNew = () => {
         }
     ];
 
-    const unreadCount = notifications.filter(n => n.unread).length;
-
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
             <DataOperatorHeader />
@@ -194,13 +187,13 @@ const DataOperatorDashboardNew = () => {
                             >
                                 {/* Gradient Background */}
                                 <div className={`absolute inset-0 bg-gradient-to-br ${feature.bgGradient} opacity-5 group-hover:opacity-10 transition-opacity`}></div>
-                                
+
                                 <CardContent className="relative p-6">
                                     {/* Icon Circle with Animation */}
                                     <div className="flex items-center justify-center mb-4">
                                         <div className={`relative w-20 h-20 rounded-full bg-gradient-to-br ${feature.bgGradient} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}>
                                             <Icon className="h-10 w-10 text-white" strokeWidth={2.5} />
-                                            
+
                                             {/* Pulse ring animation */}
                                             <div className={`absolute inset-0 rounded-full bg-gradient-to-br ${feature.bgGradient} opacity-30 animate-ping`}></div>
                                         </div>
@@ -260,11 +253,10 @@ const DataOperatorDashboardNew = () => {
                             ].map((activity, index) => (
                                 <div key={index} className="flex items-center justify-between py-2 border-b last:border-0">
                                     <div className="flex items-center gap-3">
-                                        <div className={`h-2 w-2 rounded-full ${
-                                            activity.type === 'success' ? 'bg-green-500' :
-                                            activity.type === 'warning' ? 'bg-yellow-500' :
-                                            'bg-blue-500'
-                                        }`}></div>
+                                        <div className={`h-2 w-2 rounded-full ${activity.type === 'success' ? 'bg-green-500' :
+                                                activity.type === 'warning' ? 'bg-yellow-500' :
+                                                    'bg-blue-500'
+                                            }`}></div>
                                         <div>
                                             <p className="text-sm font-medium text-gray-900">{activity.action}</p>
                                             <p className="text-xs text-gray-600">{activity.name}</p>

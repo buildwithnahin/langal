@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\UserProfile;
 use App\Models\CustomerBusinessDetail;
 use App\Services\OtpService;
+use App\Services\DataOperatorNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
@@ -18,10 +19,12 @@ use Illuminate\Support\Facades\Log;
 class CustomerAuthController extends Controller
 {
     protected $otpService;
+    protected $notificationService;
 
-    public function __construct(OtpService $otpService)
+    public function __construct(OtpService $otpService, DataOperatorNotificationService $notificationService)
     {
         $this->otpService = $otpService;
+        $this->notificationService = $notificationService;
     }
 
     /**
@@ -448,6 +451,11 @@ class CustomerAuthController extends Controller
             }
 
             Log::info('Customer registration successful', ['user_id' => $user->user_id]);
+
+            // Send notification to data operators
+            $this->notificationService->notifyNewCustomerRegistration($user, [
+                'name' => $request->fullName,
+            ]);
 
             return response()->json([
                 'success' => true,

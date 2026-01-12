@@ -40,6 +40,10 @@ const CentralSocialFeed = ({ showHeader = true }: CentralSocialFeedProps) => {
     const [feedFilter, setFeedFilter] = useState("all");
     const [isLoading, setIsLoading] = useState(true);
     const [likingPosts, setLikingPosts] = useState<Set<string>>(new Set());
+    const [currentPage, setCurrentPage] = useState(1);
+    const [hasMore, setHasMore] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const POSTS_PER_PAGE = 10;
 
     // Initialize service and load posts
     useEffect(() => {
@@ -47,26 +51,51 @@ const CentralSocialFeed = ({ showHeader = true }: CentralSocialFeedProps) => {
     }, [user]); // Reload when user changes
 
     // Load posts based on filter
-    const loadPosts = async () => {
-        setIsLoading(true);
+    const loadPosts = async (page = 1, append = false) => {
+        if (page === 1) {
+            setIsLoading(true);
+        } else {
+            setLoadingMore(true);
+        }
+        
         try {
             const userId = user?.user_id || (user?.id ? parseInt(user.id) : undefined);
-            const fetchedPosts = await socialFeedService.getPosts(1, 10, userId);
+            const fetchedPosts = await socialFeedService.getPosts(page, POSTS_PER_PAGE, userId);
+            
+            // Check if there are more posts
+            setHasMore(fetchedPosts.length === POSTS_PER_PAGE);
+            
             // Filter locally for now since backend doesn't support filtering yet
             const filtered = feedFilter === "all" 
                 ? fetchedPosts 
                 : fetchedPosts.filter(p => p.type === feedFilter);
-            setPosts(filtered);
+            
+            if (append) {
+                setPosts(prev => [...prev, ...filtered]);
+            } else {
+                setPosts(filtered);
+            }
+            setCurrentPage(page);
         } catch (error) {
             console.error("Failed to load posts", error);
         } finally {
             setIsLoading(false);
+            setLoadingMore(false);
+        }
+    };
+
+    // Load more posts
+    const loadMorePosts = () => {
+        if (!loadingMore && hasMore) {
+            loadPosts(currentPage + 1, true);
         }
     };
 
     // Reload posts when filter changes
     useEffect(() => {
-        loadPosts();
+        setCurrentPage(1);
+        setHasMore(true);
+        loadPosts(1, false);
     }, [feedFilter, user?.type]);
 
     // Handle new post creation
@@ -350,6 +379,34 @@ const CentralSocialFeed = ({ showHeader = true }: CentralSocialFeedProps) => {
                                     />
                                 </div>
                             ))}
+                            
+                            {/* Load More Button */}
+                            {hasMore && posts.length > 0 && (
+                                <div className="flex justify-center py-4">
+                                    <Button
+                                        variant="outline"
+                                        onClick={loadMorePosts}
+                                        disabled={loadingMore}
+                                        className="px-8"
+                                    >
+                                        {loadingMore ? (
+                                            <>
+                                                <span className="animate-spin mr-2">⏳</span>
+                                                লোড হচ্ছে...
+                                            </>
+                                        ) : (
+                                            "আরও পোস্ট দেখুন"
+                                        )}
+                                    </Button>
+                                </div>
+                            )}
+                            
+                            {/* No more posts message */}
+                            {!hasMore && posts.length > 0 && (
+                                <div className="text-center py-4 text-gray-500">
+                                    সব পোস্ট দেখা হয়ে গেছে
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>

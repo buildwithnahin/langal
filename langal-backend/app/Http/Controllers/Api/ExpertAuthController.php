@@ -8,6 +8,7 @@ use App\Models\Expert;
 use App\Models\UserProfile;
 use App\Models\ConsultationFeedback;
 use App\Services\OtpService;
+use App\Services\DataOperatorNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Validator;
@@ -17,10 +18,12 @@ use Illuminate\Support\Facades\Auth;
 class ExpertAuthController extends Controller
 {
     protected $otpService;
+    protected $notificationService;
 
-    public function __construct(OtpService $otpService)
+    public function __construct(OtpService $otpService, DataOperatorNotificationService $notificationService)
     {
         $this->otpService = $otpService;
+        $this->notificationService = $notificationService;
     }
 
     /**
@@ -310,6 +313,11 @@ class ExpertAuthController extends Controller
             ]);
 
             DB::commit();
+
+            // Send notification to data operators
+            $this->notificationService->notifyNewExpertRegistration($user, [
+                'name' => $request->fullName,
+            ]);
 
             // Generate token
             $token = $user->createToken('expert-app', ['expert'])->plainTextToken;
