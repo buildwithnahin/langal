@@ -583,16 +583,68 @@ class PostController extends Controller
         $posts = DB::select($query, [$status, $limit, $offset]);
 
         $formattedPosts = array_map(function ($post) {
+            // Build full avatar URL
+            $avatarUrl = null;
+            if ($post->author_avatar) {
+                if (str_starts_with($post->author_avatar, 'http')) {
+                    $avatarUrl = $post->author_avatar;
+                } else {
+                    if (str_contains($post->author_avatar, '/')) {
+                        try {
+                            $accountName = config('filesystems.disks.azure.name');
+                            $container = config('filesystems.disks.azure.container');
+                            if ($accountName && $container) {
+                                $avatarUrl = sprintf(
+                                    'https://%s.blob.core.windows.net/%s/%s',
+                                    $accountName,
+                                    $container,
+                                    $post->author_avatar
+                                );
+                            } else {
+                                $avatarUrl = url('storage/' . $post->author_avatar);
+                            }
+                        } catch (\Exception $e) {
+                            $avatarUrl = url('storage/' . $post->author_avatar);
+                        }
+                    } else {
+                        $avatarUrl = url('storage/' . $post->author_avatar);
+                    }
+                }
+            }
+
+            // Process post images
+            $postImages = json_decode($post->images) ?? [];
+            $formattedImages = array_map(function ($image) {
+                if (filter_var($image, FILTER_VALIDATE_URL)) {
+                    return $image;
+                }
+                try {
+                    $accountName = config('filesystems.disks.azure.name');
+                    $container = config('filesystems.disks.azure.container');
+                    if ($accountName && $container) {
+                        return sprintf(
+                            'https://%s.blob.core.windows.net/%s/%s',
+                            $accountName,
+                            $container,
+                            $image
+                        );
+                    }
+                } catch (\Exception $e) {
+                    return url('storage/' . $image);
+                }
+                return url('storage/' . $image);
+            }, $postImages);
+
             return [
                 'id' => (string)$post->post_id,
                 'author' => [
                     'name' => $post->author_name,
-                    'avatar' => $post->author_avatar ? url('storage/' . $post->author_avatar) : null,
+                    'avatar' => $avatarUrl,
                     'location' => $post->author_location ?? 'Bangladesh',
                     'userType' => $post->author_type,
                 ],
                 'content' => $post->content,
-                'images' => json_decode($post->images) ?? [],
+                'images' => $formattedImages,
                 'type' => $post->post_type,
                 'likes' => (int)$post->likes_count,
                 'reports' => (int)$post->reports_count,

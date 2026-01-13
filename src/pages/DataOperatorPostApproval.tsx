@@ -19,6 +19,7 @@ import {
 import DataOperatorHeader from "@/components/data-operator/DataOperatorHeader";
 import api from "@/services/api";
 import { useAuth } from "@/contexts/AuthContext";
+import { getAzureImageUrl } from "@/lib/utils";
 
 interface Post {
   id: string;
@@ -176,7 +177,7 @@ const DataOperatorPostApproval = () => {
           <div className="flex items-start justify-between mb-4">
             <div className="flex items-center gap-3">
               <Avatar className="h-12 w-12">
-                <AvatarImage src={post.author.avatar || undefined} />
+                <AvatarImage src={getAzureImageUrl(post.author.avatar)} />
                 <AvatarFallback>{post.author.name[0]}</AvatarFallback>
               </Avatar>
               <div>
@@ -221,9 +222,12 @@ const DataOperatorPostApproval = () => {
               {post.images.map((image, idx) => (
                 <img
                   key={idx}
-                  src={image}
+                  src={getAzureImageUrl(image)}
                   alt={`Post image ${idx + 1}`}
                   className="rounded-lg w-full h-48 object-cover"
+                  onError={(e) => {
+                    e.currentTarget.src = '/img/placeholder.png';
+                  }}
                 />
               ))}
             </div>
