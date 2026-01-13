@@ -30,6 +30,7 @@ import {
     CompleteWeatherData
 } from "@/services/weatherService";
 import { getProfilePhotoUrl } from "@/lib/utils";
+import { getExpertStats } from "@/services/consultationService";
 
 // Import dashboard icons
 import socialFeedIcon from "@/assets/dashboard-icons/social-feed.png";
@@ -49,7 +50,10 @@ const ExpertDashboard = () => {
     const [weatherError, setWeatherError] = useState<string | null>(null);
 
     // Expert stats
-    const [totalConsultations] = useState<number>(342);
+    const [totalConsultations, setTotalConsultations] = useState<number>(0);
+    const [completedConsultations, setCompletedConsultations] = useState<number>(0);
+    const [specialization, setSpecialization] = useState<string>("");
+    const [statsLoading, setStatsLoading] = useState(true);
 
     // রাত কিনা চেক করার হেল্পার
     const isNightTime = (): boolean => {
@@ -93,6 +97,27 @@ const ExpertDashboard = () => {
         const year = toBengaliNumber(today.getFullYear());
         return `${day} ই ${month}, ${year}`;
     };
+
+    // Fetch expert stats from database
+    useEffect(() => {
+        const fetchExpertStats = async () => {
+            try {
+                setStatsLoading(true);
+                const response = await getExpertStats();
+                if (response.success && response.data) {
+                    setTotalConsultations(response.data.total_appointments || 0);
+                    setCompletedConsultations(response.data.completed_appointments || 0);
+                    setSpecialization(response.data.specialization_bn || response.data.specialization || "");
+                }
+            } catch (error) {
+                console.error("Expert stats fetch error:", error);
+            } finally {
+                setStatsLoading(false);
+            }
+        };
+
+        fetchExpertStats();
+    }, []);
 
     // Fetch weather on mount using GPS
     useEffect(() => {
@@ -210,12 +235,17 @@ const ExpertDashboard = () => {
                                 {user?.verificationStatus && (
                                     <>
                                         {user.verificationStatus === 'approved' && (
-                                            <div className="absolute -bottom-1 -right-1 bg-blue-500 rounded-full p-1 shadow-md">
+                                            <div className="absolute -bottom-1 -right-1 bg-green-500 rounded-full p-1 shadow-md">
                                                 <CheckCircle className="h-4 w-4 text-white" />
                                             </div>
                                         )}
                                         {user.verificationStatus === 'pending' && (
                                             <div className="absolute -bottom-1 -right-1 bg-yellow-500 rounded-full p-1 shadow-md">
+                                                <Clock className="h-4 w-4 text-white" />
+                                            </div>
+                                        )}
+                                        {user.verificationStatus === 'rejected' && (
+                                            <div className="absolute -bottom-1 -right-1 bg-red-500 rounded-full p-1 shadow-md">
                                                 <Clock className="h-4 w-4 text-white" />
                                             </div>
                                         )}
@@ -250,13 +280,17 @@ const ExpertDashboard = () => {
                                 </div>
                                 <div>
                                     <p className="text-xs text-muted-foreground">মোট পরামর্শ</p>
-                                    <p className="text-lg font-semibold">{toBengaliNumber(totalConsultations)} টি</p>
+                                    {statsLoading ? (
+                                        <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
+                                    ) : (
+                                        <p className="text-lg font-semibold">{toBengaliNumber(totalConsultations)} টি</p>
+                                    )}
                                 </div>
                             </div>
                         </CardContent>
                     </Card>
 
-                    {/* সফলতার হার */}
+                    {/* বিশেষত্ব */}
                     <Card className="border">
                         <CardContent className="p-4">
                             <div className="flex items-center gap-3">
@@ -264,8 +298,14 @@ const ExpertDashboard = () => {
                                     <CheckCircle className="h-5 w-5 text-green-600" />
                                 </div>
                                 <div>
-                                    <p className="text-xs text-muted-foreground">সফলতার হার</p>
-                                    <p className="text-lg font-semibold">৯২%</p>
+                                    <p className="text-xs text-muted-foreground">বিশেষত্ব</p>
+                                    {statsLoading ? (
+                                        <Loader2 className="h-5 w-5 animate-spin text-green-600" />
+                                    ) : (
+                                        <p className="text-sm font-semibold line-clamp-1">
+                                            {specialization || "তথ্য নেই"}
+                                        </p>
+                                    )}
                                 </div>
                             </div>
                         </CardContent>
@@ -336,7 +376,7 @@ const ExpertDashboard = () => {
                 <div
                     className="relative rounded-xl p-4 -mx-4"
                     style={{
-                        backgroundImage: 'url("/img/farmer_dashbord_bg.svg")',
+                        backgroundImage: 'url("/img/expert_dashboard_bg.png")',
                         backgroundRepeat: 'no-repeat',
                         backgroundPosition: 'bottom center',
                         backgroundSize: 'cover'

@@ -506,18 +506,18 @@ const DataOperatorFieldDataCollectionNew = () => {
                   key={step.id}
                   onClick={() => goToStep(step.id)}
                   className={`p-3 rounded-lg text-center transition-all ${currentStep === step.id
-                      ? 'bg-green-600 text-white shadow-lg scale-105'
-                      : currentStep > step.id
-                        ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    ? 'bg-green-600 text-white shadow-lg scale-105'
+                    : currentStep > step.id
+                      ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                     }`}
                 >
                   <div className="flex flex-col items-center">
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center mb-2 ${currentStep === step.id
-                        ? 'bg-white text-green-600'
-                        : currentStep > step.id
-                          ? 'bg-green-600 text-white'
-                          : 'bg-gray-300 text-gray-600'
+                      ? 'bg-white text-green-600'
+                      : currentStep > step.id
+                        ? 'bg-green-600 text-white'
+                        : 'bg-gray-300 text-gray-600'
                       }`}>
                       {currentStep > step.id ? (
                         <CheckCircle2 className="h-5 w-5" />
@@ -559,6 +559,7 @@ const DataOperatorFieldDataCollectionNew = () => {
           </Button>
 
           <div className="flex gap-4">
+            {/* ড্রাফট সংরক্ষণ - Commented out for now
             <Button
               onClick={() => {
                 toast({
@@ -572,6 +573,7 @@ const DataOperatorFieldDataCollectionNew = () => {
               <Save className="mr-2 h-4 w-4" />
               ড্রাফট সংরক্ষণ
             </Button>
+            */}
 
             {currentStep < STEPS.length ? (
               <Button

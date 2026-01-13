@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, FileDown, RefreshCw, BarChart3, FileText, Users, MapPin, Sprout, TrendingUp, DollarSign, Leaf } from "lucide-react";
+import { Loader2, FileDown, RefreshCw, BarChart3, FileText, Users, MapPin, Sprout, TrendingUp, DollarSign, Leaf, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import api from "@/services/api";
 import {
@@ -69,6 +70,7 @@ interface StatisticsData {
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D', '#FFC658', '#8DD1E1', '#A4DE6C', '#D0ED57'];
 
 const FieldDataStatisticsDashboard = () => {
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
@@ -234,6 +236,16 @@ const FieldDataStatisticsDashboard = () => {
       <DataOperatorHeader />
 
       <main className="container mx-auto px-4 pt-24 space-y-6">
+        {/* Back Button */}
+        <Button
+          variant="ghost"
+          onClick={() => navigate('/data-operator-dashboard')}
+          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 -ml-2"
+        >
+          <ArrowLeft className="h-5 w-5" />
+          <span>ড্যাশবোর্ডে ফিরে যান</span>
+        </Button>
+
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>

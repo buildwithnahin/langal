@@ -731,6 +731,14 @@ class AppointmentController extends Controller
                 ->where('expert_id', $expertId)
                 ->count();
 
+            // Get expert specialization
+            $expertQualification = DB::table('expert_qualifications')
+                ->where('user_id', $expertId)
+                ->first();
+            
+            $specialization = $expertQualification->specialization ?? null;
+            $specialization_bn = $expertQualification->specialization_bn ?? $specialization;
+
             return response()->json([
                 'success' => true,
                 'data' => [
@@ -739,6 +747,8 @@ class AppointmentController extends Controller
                     'pending_appointments' => $pendingAppointments,
                     'average_rating' => $avgRating ? round($avgRating, 1) : 0,
                     'total_reviews' => $totalReviews,
+                    'specialization' => $specialization,
+                    'specialization_bn' => $specialization_bn,
                 ],
             ]);
         } catch (\Exception $e) {

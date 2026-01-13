@@ -160,7 +160,7 @@ const App = () => {
                   <Route
                     path="/social-feed"
                     element={
-                      <ProtectedRoute>
+                      <ProtectedRoute allowedTypes={['farmer', 'customer', 'expert']}>
                         <SocialFeed />
                       </ProtectedRoute>
                     }
@@ -168,7 +168,7 @@ const App = () => {
                   <Route
                     path="/marketplace"
                     element={
-                      <ProtectedRoute>
+                      <ProtectedRoute allowedTypes={['farmer', 'customer']}>
                         <Marketplace />
                       </ProtectedRoute>
                     }
@@ -176,7 +176,7 @@ const App = () => {
                   <Route
                     path="/central-marketplace"
                     element={
-                      <ProtectedRoute>
+                      <ProtectedRoute allowedTypes={['farmer', 'customer']}>
                         <CentralMarketplace />
                       </ProtectedRoute>
                     }
@@ -224,7 +224,7 @@ const App = () => {
                   <Route
                     path="/consultation"
                     element={
-                      <ProtectedRoute>
+                      <ProtectedRoute allowedTypes={['farmer', 'expert']}>
                         <ExpertListPage />
                       </ProtectedRoute>
                     }
@@ -240,7 +240,7 @@ const App = () => {
                   <Route
                     path="/expert-dashboard"
                     element={
-                      <ProtectedRoute>
+                      <ProtectedRoute allowedTypes={['expert']}>
                         <ExpertDashboard />
                       </ProtectedRoute>
                     }
@@ -248,7 +248,7 @@ const App = () => {
                   <Route
                     path="/expert-profile"
                     element={
-                      <ProtectedRoute>
+                      <ProtectedRoute allowedTypes={['expert']}>
                         <ExpertProfile />
                       </ProtectedRoute>
                     }
@@ -256,7 +256,7 @@ const App = () => {
                   <Route
                     path="/customer-dashboard"
                     element={
-                      <ProtectedRoute>
+                      <ProtectedRoute allowedTypes={['customer']}>
                         <CustomerDashboard />
                       </ProtectedRoute>
                     }
@@ -264,7 +264,7 @@ const App = () => {
                   <Route
                     path="/customer-profile"
                     element={
-                      <ProtectedRoute>
+                      <ProtectedRoute allowedTypes={['customer']}>
                         <CustomerProfile />
                       </ProtectedRoute>
                     }
@@ -272,7 +272,7 @@ const App = () => {
                   <Route
                     path="/consultant-dashboard"
                     element={
-                      <ProtectedRoute>
+                      <ProtectedRoute allowedTypes={['expert']}>
                         <ConsultantDashboard />
                       </ProtectedRoute>
                     }
@@ -280,7 +280,7 @@ const App = () => {
                   <Route
                     path="/consultant-profile"
                     element={
-                      <ProtectedRoute>
+                      <ProtectedRoute allowedTypes={['expert']}>
                         <ConsultantProfile />
                       </ProtectedRoute>
                     }
@@ -288,7 +288,7 @@ const App = () => {
                   <Route
                     path="/farmer-dashboard"
                     element={
-                      <ProtectedRoute>
+                      <ProtectedRoute allowedTypes={['farmer']}>
                         <FarmerDashboard />
                       </ProtectedRoute>
                     }
@@ -304,42 +304,82 @@ const App = () => {
                   <Route
                     path="/data-operator-dashboard"
                     element={
-                      <ProtectedRoute>
+                      <ProtectedRoute allowedTypes={['data_operator']}>
                         <DataOperatorDashboard />
                       </ProtectedRoute>
                     }
                   />
                   <Route
                     path="/data-operator/profile-verification"
-                    element={<DataOperatorProfileVerification />}
+                    element={
+                      <ProtectedRoute allowedTypes={['data_operator']}>
+                        <DataOperatorProfileVerification />
+                      </ProtectedRoute>
+                    }
                   />
                   <Route
                     path="/data-operator/crop-verification"
-                    element={<DataOperatorCropVerification />}
+                    element={
+                      <ProtectedRoute allowedTypes={['data_operator']}>
+                        <DataOperatorCropVerification />
+                      </ProtectedRoute>
+                    }
                   />
                   <Route
                     path="/data-operator/register-farmer"
-                    element={<DataOperatorRegisterFarmer />}
+                    element={
+                      <ProtectedRoute allowedTypes={['data_operator']}>
+                        <DataOperatorRegisterFarmer />
+                      </ProtectedRoute>
+                    }
                   />
                   <Route
                     path="/data-operator/field-data"
-                    element={<DataOperatorFieldData />}
+                    element={
+                      <ProtectedRoute allowedTypes={['data_operator']}>
+                        <DataOperatorFieldData />
+                      </ProtectedRoute>
+                    }
                   />
                   <Route
                     path="/data-operator/field-data-collection"
-                    element={<DataOperatorFieldDataCollection />}
+                    element={
+                      <ProtectedRoute allowedTypes={['data_operator']}>
+                        <DataOperatorFieldDataCollection />
+                      </ProtectedRoute>
+                    }
                   />
                   <Route
                     path="/data-operator/reports"
-                    element={<DataOperatorReports />}
+                    element={
+                      <ProtectedRoute allowedTypes={['data_operator']}>
+                        <DataOperatorReports />
+                      </ProtectedRoute>
+                    }
                   />
                   <Route
                     path="/data-operator/statistics"
-                    element={<DataOperatorStatistics />}
+                    element={
+                      <ProtectedRoute allowedTypes={['data_operator']}>
+                        <DataOperatorStatistics />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/data-operator/field-data-statistics"
+                    element={
+                      <ProtectedRoute allowedTypes={['data_operator']}>
+                        <FieldDataStatisticsDashboard />
+                      </ProtectedRoute>
+                    }
                   />
                   <Route
                     path="/data-operator/social-feed-reports"
-                    element={<SocialFeedReportMng />}
+                    element={
+                      <ProtectedRoute allowedTypes={['data_operator']}>
+                        <SocialFeedReportMng />
+                      </ProtectedRoute>
+                    }
                   />
                   <Route
                     path="/market-prices"
@@ -369,7 +409,7 @@ const App = () => {
                   <Route
                     path="/consultation"
                     element={
-                      <ProtectedRoute>
+                      <ProtectedRoute allowedTypes={['farmer', 'expert']}>
                         <ExpertListPage />
                       </ProtectedRoute>
                     }
@@ -377,7 +417,7 @@ const App = () => {
                   <Route
                     path="/consultation/expert/:expertId"
                     element={
-                      <ProtectedRoute>
+                      <ProtectedRoute allowedTypes={['farmer', 'expert']}>
                         <ExpertProfilePage />
                       </ProtectedRoute>
                     }
@@ -385,7 +425,7 @@ const App = () => {
                   <Route
                     path="/consultation/book/:expertId"
                     element={
-                      <ProtectedRoute>
+                      <ProtectedRoute allowedTypes={['farmer', 'expert']}>
                         <BookAppointmentPage />
                       </ProtectedRoute>
                     }
@@ -393,7 +433,7 @@ const App = () => {
                   <Route
                     path="/consultation/appointments"
                     element={
-                      <ProtectedRoute>
+                      <ProtectedRoute allowedTypes={['farmer', 'expert']}>
                         <MyAppointmentsPage />
                       </ProtectedRoute>
                     }
@@ -401,7 +441,7 @@ const App = () => {
                   <Route
                     path="/consultation/appointment/:appointmentId"
                     element={
-                      <ProtectedRoute>
+                      <ProtectedRoute allowedTypes={['farmer', 'expert']}>
                         <AppointmentDetailsPage />
                       </ProtectedRoute>
                     }
@@ -409,7 +449,7 @@ const App = () => {
                   <Route
                     path="/consultation/chat/:appointmentId"
                     element={
-                      <ProtectedRoute>
+                      <ProtectedRoute allowedTypes={['farmer', 'expert']}>
                         <ChatRoom />
                       </ProtectedRoute>
                     }
@@ -417,7 +457,7 @@ const App = () => {
                   <Route
                     path="/consultation/call/:appointmentId"
                     element={
-                      <ProtectedRoute>
+                      <ProtectedRoute allowedTypes={['farmer', 'expert']}>
                         <VideoCallPage />
                       </ProtectedRoute>
                     }
@@ -425,7 +465,7 @@ const App = () => {
                   <Route
                     path="/consultation/feedback/:appointmentId"
                     element={
-                      <ProtectedRoute>
+                      <ProtectedRoute allowedTypes={['farmer', 'expert']}>
                         <FeedbackPage />
                       </ProtectedRoute>
                     }
@@ -433,7 +473,7 @@ const App = () => {
                   <Route
                     path="/consultation/dashboard"
                     element={
-                      <ProtectedRoute>
+                      <ProtectedRoute allowedTypes={['expert']}>
                         <ExpertConsultationDashboard />
                       </ProtectedRoute>
                     }
@@ -441,7 +481,7 @@ const App = () => {
                   <Route
                     path="/consultation/availability"
                     element={
-                      <ProtectedRoute>
+                      <ProtectedRoute allowedTypes={['expert']}>
                         <ExpertAvailabilityPage />
                       </ProtectedRoute>
                     }
