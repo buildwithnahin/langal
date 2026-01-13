@@ -345,7 +345,7 @@ const BookAppointmentPage = () => {
             </div>
 
             {/* Consultation Type - No Fee Display */}
-            <div className="px-4 mb-3">
+            {/* <div className="px-4 mb-3">
                 <h3 className="text-sm font-medium text-gray-700 mb-2">পরামর্শের ধরন</h3>
                 <RadioGroup
                     value={consultationType}
@@ -388,10 +388,10 @@ const BookAppointmentPage = () => {
                         <span className="text-xs font-medium">চ্যাট</span>
                     </Label>
                 </RadioGroup>
-            </div>
+            </div> */}
 
             {/* Urgency Level */}
-            <div className="px-4 mb-3">
+            {/* <div className="px-4 mb-3">
                 <h3 className="text-sm font-medium text-gray-700 mb-2">জরুরী অবস্থা</h3>
                 <RadioGroup
                     value={urgency}
@@ -423,7 +423,7 @@ const BookAppointmentPage = () => {
                         জরুরী
                     </Label>
                 </RadioGroup>
-            </div>
+            </div> */}
 
             {/* Problem Description */}
             <div className="px-4 mb-4">
@@ -464,13 +464,13 @@ const BookAppointmentPage = () => {
                 </div>
             </div>
 
-            {/* Floating TTS - Smaller */}
+            {/* Floating TTS - Smaller 
             <div className="fixed bottom-20 right-4">
                 <TTSButton
                     text="এখানে আপনি বিশেষজ্ঞের সাথে পরামর্শের জন্য সময় বুক করতে পারেন। প্রথমে তারিখ নির্বাচন করুন, তারপর সময় এবং পরামর্শের ধরন বেছে নিন।"
                     className="bg-green-600 hover:bg-green-700 h-12 w-12 rounded-full shadow-lg"
                 />
-            </div>
+            </div> */}
         </div>
     );
 };
