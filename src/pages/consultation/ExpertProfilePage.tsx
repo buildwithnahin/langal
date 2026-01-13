@@ -168,12 +168,12 @@ const ExpertProfilePage = () => {
             {expert.specialization_bn || expert.specialization}
           </p>
 
-          <div className="flex items-center gap-2 mt-3 bg-gray-50 px-3 py-1 rounded-full">
+          {/* <div className="flex items-center gap-2 mt-3 bg-gray-50 px-3 py-1 rounded-full">
             {renderStars(expert.rating)}
             <span className="text-sm text-gray-600 font-medium">
               {expert.rating.toFixed(1)} ({expert.total_reviews} রিভিউ)
             </span>
-          </div>
+          </div> */}
         </div>
 
         {/* Quick Stats */}
@@ -193,10 +193,10 @@ const ExpertProfilePage = () => {
       {/* Tabs */}
       <div className="px-4 py-4">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="about">পরিচিতি</TabsTrigger>
             <TabsTrigger value="schedule">সময়সূচী</TabsTrigger>
-            <TabsTrigger value="reviews">রিভিউ</TabsTrigger>
+            {/* <TabsTrigger value="reviews">রিভিউ</TabsTrigger> */}
           </TabsList>
 
           <TabsContent value="about" className="mt-4 space-y-4">
@@ -298,7 +298,7 @@ const ExpertProfilePage = () => {
             </Card>
           </TabsContent>
 
-          <TabsContent value="reviews" className="mt-4 space-y-4">
+          {/* <TabsContent value="reviews" className="mt-4 space-y-4">
             {expert.recent_feedbacks?.length ? (
               expert.recent_feedbacks.map((feedback, index) => (
                 <Card key={index}>
@@ -344,7 +344,7 @@ const ExpertProfilePage = () => {
                 <p className="text-gray-500">এখনও কোন রিভিউ নেই</p>
               </div>
             )}
-          </TabsContent>
+          </TabsContent> */}
         </Tabs>
       </div>
 
@@ -363,12 +363,12 @@ const ExpertProfilePage = () => {
       </div>
 
       {/* Floating TTS */}
-      <div className="fixed bottom-24 right-4 z-40">
+      {/* <div className="fixed bottom-24 right-4 z-40">
         <TTSButton
           text={`${expert.user?.profile?.full_name} হলেন একজন ${expert.specialization_bn || expert.specialization} বিশেষজ্ঞ। তার ${expert.experience_years} বছরের অভিজ্ঞতা রয়েছে এবং ${expert.total_consultations}টিরও বেশি পরামর্শ দিয়েছেন।`}
           className="bg-green-600 hover:bg-green-700 h-14 w-14 rounded-full shadow-lg"
         />
-      </div>
+      </div> */}
     </div>
   );
 };

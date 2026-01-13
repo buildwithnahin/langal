@@ -164,24 +164,24 @@ const CustomerDashboard = () => {
             color: "bg-orange-500",
             stats: "৭ দিনের পূর্বাভাস"
         },
-        {
-            id: "news",
-            title: "বাজারদর",
-            description: "দৈনিক বাজারদর ও মূল্য তালিকা",
-            image: marketPriceBdIcon,
-            route: "/market-prices",
-            color: "bg-cyan-500",
-            stats: "আজকের দর"
-        },
-        {
-            id: "agricultural-news",
-            title: "কৃষি সংবাদ",
-            description: "কৃষি বিষয়ক সংবাদ ও তথ্য",
-            image: newsIcon,
-            route: "/agricultural-news",
-            color: "bg-amber-500",
-            stats: "নতুন সংবাদ"
-        }
+        // {
+        //     id: "news",
+        //     title: "বাজারদর",
+        //     description: "দৈনিক বাজারদর ও মূল্য তালিকা",
+        //     image: marketPriceBdIcon,
+        //     route: "/market-prices",
+        //     color: "bg-cyan-500",
+        //     stats: "আজকের দর"
+        // },
+        // {
+        //     id: "agricultural-news",
+        //     title: "কৃষি সংবাদ",
+        //     description: "কৃষি বিষয়ক সংবাদ ও তথ্য",
+        //     image: newsIcon,
+        //     route: "/agricultural-news",
+        //     color: "bg-amber-500",
+        //     stats: "নতুন সংবাদ"
+        // }
     ];
 
     const handleNavigation = (route: string) => {

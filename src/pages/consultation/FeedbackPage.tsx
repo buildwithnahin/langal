@@ -178,7 +178,7 @@ const FeedbackPage = () => {
         )}
 
         {/* Star Rating */}
-        <Card>
+        {/* <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-center text-lg">
               আপনার অভিজ্ঞতা কেমন ছিল?
@@ -210,7 +210,7 @@ const FeedbackPage = () => {
               {getRatingText(hoverRating || rating)}
             </p>
           </CardContent>
-        </Card>
+        </Card> */}
 
         {/* Tags */}
         <Card>

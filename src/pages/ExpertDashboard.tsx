@@ -180,15 +180,15 @@ const ExpertDashboard = () => {
             color: "bg-indigo-500",
             stats: "২৪/৭ সেবা"
         },
-        {
-            id: "agricultural-news",
-            title: "কৃষি সংবাদ",
-            description: "কৃষি বিষয়ক সংবাদ ও তথ্য",
-            image: newsIcon,
-            route: "/agricultural-news",
-            color: "bg-amber-500",
-            stats: "নতুন সংবাদ"
-        },
+        // {
+        //     id: "agricultural-news",
+        //     title: "কৃষি সংবাদ",
+        //     description: "কৃষি বিষয়ক সংবাদ ও তথ্য",
+        //     image: newsIcon,
+        //     route: "/agricultural-news",
+        //     color: "bg-amber-500",
+        //     stats: "নতুন সংবাদ"
+        // },
         {
             id: "weather",
             title: "আবহাওয়া পূর্বাভাস",

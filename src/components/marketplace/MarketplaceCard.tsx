@@ -10,18 +10,18 @@ import { englishToBangla } from "@/lib/banglaUtils";
 // Helper function to get Bengali relative time
 const getBanglaRelativeTime = (dateString: string): string => {
   if (!dateString) return "সম্প্রতি";
-  
+
   const date = new Date(dateString);
-  
+
   // Check if date is valid
   if (isNaN(date.getTime())) return "সম্প্রতি";
-  
+
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
-  
+
   // If date is in the future or very recent
   if (diffMs < 0) return "এইমাত্র";
-  
+
   const diffSecs = Math.floor(diffMs / 1000);
   const diffMins = Math.floor(diffSecs / 60);
   const diffHours = Math.floor(diffMins / 60);
@@ -194,10 +194,10 @@ export const MarketplaceCard = ({ item, onContact, onSave }: MarketplaceCardProp
             <span className="font-medium">{item.seller.name}</span>
             {item.seller.verified && <span className="text-green-600">✓</span>}
           </div>
-          <div className="flex items-center gap-1">
+          {/* <div className="flex items-center gap-1">
             <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
             <span>{item.seller.rating}</span>
-          </div>
+          </div> */}
         </div>
 
         {/* Posted time in Bengali */}
