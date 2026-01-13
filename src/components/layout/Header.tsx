@@ -59,9 +59,9 @@ export const Header = () => {
         <div className="flex items-center space-x-2">
           {isAuthenticated && (
             <>
-              <Button variant="ghost" size="sm">
+              {/* <Button variant="ghost" size="sm">
                 <Search className="h-4 w-4" />
-              </Button>
+              </Button> */}
 
               {/* Notification Dropdown */}
               <DropdownMenu>

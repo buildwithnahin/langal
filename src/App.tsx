@@ -40,8 +40,8 @@ import DataOperatorReports from "./pages/DataOperatorReports";
 import DataOperatorStatistics from "./pages/DataOperatorStatisticsNew2";
 import FieldDataStatisticsDashboard from "./pages/FieldDataStatisticsDashboard";
 import SocialFeedReportMng from "./components/data-operator/SocialFeedReportMng";
-import MarketPrices from "./pages/MarketPrices";
-import AgriculturalNews from "./pages/AgriculturalNews";
+// import MarketPrices from "./pages/MarketPrices";
+// import AgriculturalNews from "./pages/AgriculturalNews";
 import FarmerDashboard from "./pages/FarmerDashboard";
 import CentralMarketplace from "./pages/CentralMarketplace";
 import TTSDemo from "./pages/TTSDemo";
@@ -381,22 +381,22 @@ const App = () => {
                       </ProtectedRoute>
                     }
                   />
-                  <Route
+                  {/* <Route
                     path="/market-prices"
                     element={
                       <ProtectedRoute>
                         <MarketPrices />
                       </ProtectedRoute>
                     }
-                  />
-                  <Route
+                  /> */}
+                  {/* <Route
                     path="/agricultural-news"
                     element={
                       <ProtectedRoute>
                         <AgriculturalNews />
                       </ProtectedRoute>
                     }
-                  />
+                  /> */}
                   <Route
                     path="/tts-demo"
                     element={
