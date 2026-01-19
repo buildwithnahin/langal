@@ -179,16 +179,6 @@ const DataOperatorDashboardNew = () => {
             route: "/data-operator/field-data-statistics"
         },
         {
-            id: "govt-statistics",
-            title: "সরকারি প্রতিবেদন",
-            description: "সরকারি রিপোর্ট ও PDF জেনারেশন",
-            icon: FileText,
-            bgGradient: "from-purple-500 to-purple-600",
-            count: 0,
-            countLabel: "PDF রিপোর্ট",
-            route: "/data-operator/field-data-statistics"
-        },
-        {
             id: "social-feed-report",
             title: "সোশ্যাল ফিড রিপোর্ট",
             description: "পোস্ট ও কমেন্ট রিপোর্ট পরিচালনা করুন",

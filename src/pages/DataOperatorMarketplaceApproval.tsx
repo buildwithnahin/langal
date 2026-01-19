@@ -255,7 +255,7 @@ const DataOperatorMarketplaceApproval = () => {
         <div className="mb-6">
           <Button
             variant="ghost"
-            onClick={() => navigate('/data-operator/dashboard')}
+            onClick={() => navigate('/data-operator-dashboard')}
             className="mb-4"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
